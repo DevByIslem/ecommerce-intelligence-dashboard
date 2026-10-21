@@ -1,4 +1,9 @@
 
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge&logo=streamlit)](https://ecommerce-intelligence-dashboard-u8mhvyw26ffxjqxnctnrqy.streamlit.app/)
+
+[![Python](https://img.shields.io/badge/Python-3.x-blue?style=flat-square&logo=python)](https://www.python.org/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-App-FF4B4B?style=flat-square&logo=streamlit)](https://streamlit.io/)
+
 # E-commerce Intelligence Dashboard
 
 An interactive Business Intelligence dashboard built with Python, SQL, SQLite, Pandas, Plotly, and Streamlit.

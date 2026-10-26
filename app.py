@@ -1,7 +1,6 @@
 
-import sqlite3
 from pathlib import Path
-from datetime import datetime, timedelta
+import sqlite3
 
 import numpy as np
 import pandas as pd
@@ -11,45 +10,43 @@ import streamlit as st
 
 
 # =========================================================
-# 1. CONFIGURATION
+# 1. PAGE CONFIGURATION
 # =========================================================
 
 st.set_page_config(
     page_title="NOVA | E-Commerce Analytics",
-    page_icon="✦",
+    page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-DB_PATH = Path("data/ecommerce.db")
 
-BG = "#080E1B"
-PANEL = "#101A2B"
-PANEL2 = "#142238"
-ACCENT = "#38E5C3"
-BLUE = "#69A7FF"
-PURPLE = "#B39AFF"
-ORANGE = "#FFB86B"
-TEXT = "#F0F5FF"
-MUTED = "#92A4BC"
-BORDER = "#263750"
+# =========================================================
+# 2. THEME
+# =========================================================
+
+BG = "#0B1120"
+PANEL = "#111827"
+PANEL_LIGHT = "#182235"
+ACCENT = "#2DD4BF"
+ACCENT_BLUE = "#60A5FA"
+TEXT = "#F1F5F9"
+MUTED = "#94A3B8"
+BORDER = "#263449"
+GREEN = "#34D399"
+ORANGE = "#FBBF24"
+RED = "#FB7185"
 
 st.markdown(
     f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-    html, body, [class*="css"] {{
-        font-family: Inter, sans-serif;
-    }}
-
     .stApp {{
         background: {BG};
         color: {TEXT};
     }}
 
     [data-testid="stSidebar"] {{
-        background: #0C1525;
+        background: #0D1627;
         border-right: 1px solid {BORDER};
     }}
 
@@ -57,137 +54,137 @@ st.markdown(
         color: {TEXT};
     }}
 
-    .nova-logo {{
-        color: {ACCENT};
-        font-size: 27px;
+    .block-container {{
+        padding-top: 1.5rem;
+        padding-bottom: 2rem;
+        max-width: 1600px;
+    }}
+
+    h1, h2, h3 {{
+        color: {TEXT} !important;
+    }}
+
+    p, label {{
+        color: {MUTED};
+    }}
+
+    div[data-testid="stMetric"] {{
+        background: {PANEL};
+        border: 1px solid {BORDER};
+        border-radius: 14px;
+        padding: 18px;
+    }}
+
+    div[data-testid="stMetricLabel"] {{
+        color: {MUTED};
+    }}
+
+    div[data-testid="stMetricValue"] {{
+        color: {TEXT};
+    }}
+
+    .nova-card {{
+        background: {PANEL};
+        border: 1px solid {BORDER};
+        border-radius: 14px;
+        padding: 20px;
+        margin-bottom: 12px;
+    }}
+
+    .nova-label {{
+        color: {MUTED};
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+    }}
+
+    .nova-value {{
+        color: {TEXT};
+        font-size: 26px;
         font-weight: 800;
-        letter-spacing: 4px;
+        margin-top: 8px;
     }}
 
     .nova-caption {{
         color: {MUTED};
-        font-size: 11px;
-        letter-spacing: 2px;
-        text-transform: uppercase;
+        font-size: 12px;
+        margin-top: 6px;
     }}
 
-    .hero {{
-        background: linear-gradient(115deg, #142B43, #10353C 65%, #16304B);
-        border: 1px solid #2A5261;
-        border-radius: 18px;
-        padding: 26px 30px;
-        margin-bottom: 20px;
+    .nova-header {{
+        background: linear-gradient(120deg, #111827, #15253A);
+        border: 1px solid {BORDER};
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 22px;
     }}
 
-    .eyebrow {{
+    .nova-brand {{
         color: {ACCENT};
-        font-size: 11px;
+        font-size: 12px;
         font-weight: 800;
         letter-spacing: 3px;
     }}
 
-    .hero-title {{
+    .nova-title {{
         color: {TEXT};
-        font-size: 31px;
+        font-size: 30px;
         font-weight: 800;
-        margin: 10px 0;
+        margin-top: 8px;
     }}
 
-    .hero-sub {{
-        color: #B9C9DA;
+    .nova-subtitle {{
+        color: {MUTED};
+        font-size: 13px;
+        margin-top: 6px;
+    }}
+
+    .demo-banner {{
+        background: #302719;
+        border: 1px solid #765C25;
+        color: #FDE68A;
+        padding: 12px 16px;
+        border-radius: 10px;
+        margin-bottom: 18px;
         font-size: 13px;
     }}
 
-    .metric {{
-        background: {PANEL};
-        border: 1px solid {BORDER};
-        border-radius: 15px;
-        padding: 17px;
-        min-height: 128px;
-    }}
-
-    .metric-label {{
-        color: {MUTED};
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 1px;
-    }}
-
-    .metric-value {{
-        color: {TEXT};
-        font-size: 25px;
-        font-weight: 800;
-        margin: 12px 0 5px;
-        overflow-wrap: anywhere;
-    }}
-
-    .metric-foot {{
-        color: {ACCENT};
-        font-size: 11px;
-    }}
-
-    .section-head {{
-        color: {TEXT};
-        font-size: 19px;
-        font-weight: 750;
-        margin-top: 22px;
-        margin-bottom: 4px;
-    }}
-
-    .section-sub {{
-        color: {MUTED};
-        font-size: 12px;
-        margin-bottom: 13px;
-    }}
-
-    .info-card {{
-        background: {PANEL};
-        border: 1px solid {BORDER};
-        border-radius: 14px;
-        padding: 17px;
-    }}
-
     .status-pill {{
+        display: inline-block;
+        background: #10352F;
         color: {ACCENT};
-        background: #12352F;
-        padding: 5px 9px;
+        border: 1px solid #1F5A50;
+        padding: 5px 10px;
         border-radius: 20px;
-        font-size: 10px;
+        font-size: 11px;
         font-weight: 700;
     }}
 
-    div[data-testid="stPlotlyChart"] {{
-        background: {PANEL};
+    div.stButton > button {{
+        background: {PANEL_LIGHT};
+        color: {TEXT};
         border: 1px solid {BORDER};
-        border-radius: 14px;
-        padding: 5px;
-    }}
-
-    div[data-testid="stDataFrame"] {{
-        border: 1px solid {BORDER};
-        border-radius: 12px;
-    }}
-
-    div.stButton > button,
-    div.stDownloadButton > button {{
         border-radius: 9px;
-        min-height: 38px;
     }}
 
-    div.stButton > button[kind="primary"] {{
+    div.stButton > button:hover {{
+        border-color: {ACCENT};
+        color: {ACCENT};
+    }}
+
+    div[data-testid="stDownloadButton"] button {{
         background: {ACCENT};
-        color: #06131A;
+        color: #06221E;
         border: none;
-        font-weight: 800;
+        border-radius: 9px;
+        font-weight: 700;
     }}
 
     hr {{
         border-color: {BORDER};
     }}
 
-    #MainMenu, footer {{
-        visibility: hidden;
-    }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -195,466 +192,534 @@ st.markdown(
 
 
 # =========================================================
-# 2. DEMO DATA
+# 3. DATA GENERATION
 # =========================================================
 
 @st.cache_data
-def make_demo_data():
+def make_demo_data(n=1500):
+    """Generate sample orders for demonstration."""
+
     rng = np.random.default_rng(42)
 
-    n = 1200
-    dates = pd.date_range(
-        end=pd.Timestamp.today().normalize(),
-        periods=365,
-        freq="D",
+    start_date = pd.Timestamp("2025-01-01")
+    end_date = pd.Timestamp("2026-10-01")
+
+    date_range = (
+        end_date - start_date
+    ).days
+
+    order_dates = (
+        start_date
+        + pd.to_timedelta(
+            rng.integers(0, date_range + 1, n),
+            unit="D",
+        )
     )
 
     categories = [
         "Electronics",
         "Fashion",
-        "Home & Living",
+        "Home & Kitchen",
         "Beauty",
         "Sports",
+        "Books",
     ]
-
-    products = {
-        "Electronics": [
-            "Wireless Headphones",
-            "Smart Watch",
-            "Bluetooth Speaker",
-            "Laptop Stand",
-        ],
-        "Fashion": [
-            "Classic Sneakers",
-            "Urban Backpack",
-            "Cotton T-Shirt",
-            "Premium Jacket",
-        ],
-        "Home & Living": [
-            "Desk Lamp",
-            "Ceramic Mug",
-            "Storage Organizer",
-            "Modern Chair",
-        ],
-        "Beauty": [
-            "Skincare Set",
-            "Daily Moisturizer",
-            "Face Cleanser",
-            "Beauty Kit",
-        ],
-        "Sports": [
-            "Yoga Mat",
-            "Fitness Bottle",
-            "Resistance Bands",
-            "Training Bag",
-        ],
-    }
 
     regions = [
         "North America",
         "Europe",
         "Asia Pacific",
         "Middle East",
-        "North Africa",
+        "Africa",
     ]
 
-    records = []
+    products = {
+        "Electronics": [
+            "Wireless Headphones",
+            "Smart Watch",
+            "Laptop Stand",
+            "Bluetooth Speaker",
+        ],
+        "Fashion": [
+            "Running Shoes",
+            "Classic T-Shirt",
+            "Leather Bag",
+            "Winter Jacket",
+        ],
+        "Home & Kitchen": [
+            "Coffee Maker",
+            "Desk Lamp",
+            "Storage Organizer",
+            "Air Fryer",
+        ],
+        "Beauty": [
+            "Skin Care Set",
+            "Hair Dryer",
+            "Face Cleanser",
+            "Perfume",
+        ],
+        "Sports": [
+            "Yoga Mat",
+            "Fitness Tracker",
+            "Water Bottle",
+            "Resistance Bands",
+        ],
+        "Books": [
+            "Business Strategy",
+            "Data Science Guide",
+            "Personal Finance",
+            "Productivity Journal",
+        ],
+    }
 
-    for i in range(n):
-        category = rng.choice(categories)
-        product = rng.choice(products[category])
-        quantity = int(rng.integers(1, 5))
-        price = float(rng.uniform(18, 320))
-        discount = float(rng.choice([0, 0, 0.05, 0.10, 0.15]))
-        status = rng.choice(
-            ["Delivered", "Delivered", "Delivered", "Processing", "Cancelled"]
-        )
+    selected_categories = rng.choice(
+        categories,
+        size=n,
+    )
 
-        records.append({
-            "order_id": f"ORD-{10001 + i}",
-            "order_date": pd.Timestamp(
-                rng.choice(dates)
-            ),
-            "customer_id": f"CUST-{int(rng.integers(1000, 1460))}",
-            "product_name": product,
-            "category": category,
-            "region": rng.choice(regions),
-            "quantity": quantity,
-            "unit_price": round(price, 2),
-            "discount": discount,
-            "status": status,
-        })
+    selected_products = [
+        rng.choice(products[category])
+        for category in selected_categories
+    ]
 
-    data = pd.DataFrame(records)
-    data["revenue"] = (
-        data["quantity"]
-        * data["unit_price"]
-        * (1 - data["discount"])
+    prices = rng.uniform(15, 450, n).round(2)
+    quantities = rng.integers(1, 5, n)
+    discounts = rng.choice(
+        [0, 0.05, 0.10, 0.15, 0.20],
+        size=n,
+        p=[0.45, 0.15, 0.20, 0.12, 0.08],
+    )
+
+    revenue = (
+        prices * quantities * (1 - discounts)
     ).round(2)
 
-    return data
+    statuses = rng.choice(
+        ["Delivered", "Processing", "Shipped", "Cancelled"],
+        size=n,
+        p=[0.77, 0.10, 0.08, 0.05],
+    )
 
-
-# =========================================================
-# 3. DATABASE LOADING
-# =========================================================
-
-@st.cache_data
-def load_database(path):
-    if not Path(path).exists():
-        return None
-
-    try:
-        with sqlite3.connect(path) as connection:
-            tables = pd.read_sql_query(
-                "SELECT name FROM sqlite_master WHERE type='table'",
-                connection,
-            )
-
-            if "orders" not in tables["name"].tolist():
-                return None
-
-            return pd.read_sql_query(
-                'SELECT * FROM "orders"',
-                connection,
-            )
-    except Exception:
-        return None
-
-
-def prepare_data(data):
-    if data is None or data.empty:
-        return None
-
-    data = data.copy()
-    data.columns = [
-        str(col).strip().lower()
-        for col in data.columns
+    customers = [
+        f"CUST-{number:04d}"
+        for number in rng.integers(1, 500, n)
     ]
 
-    if not {"order_id", "order_date", "unit_price"}.issubset(data.columns):
-        return None
-
-    data["order_date"] = pd.to_datetime(
-        data["order_date"], errors="coerce"
+    df = pd.DataFrame(
+        {
+            "order_id": [
+                f"ORD-{number:06d}"
+                for number in range(1, n + 1)
+            ],
+            "order_date": order_dates,
+            "customer_id": customers,
+            "product": selected_products,
+            "category": selected_categories,
+            "region": rng.choice(regions, size=n),
+            "quantity": quantities,
+            "unit_price": prices,
+            "discount": discounts,
+            "revenue": revenue,
+            "status": statuses,
+        }
     )
-    data["unit_price"] = pd.to_numeric(
-        data["unit_price"], errors="coerce"
-    )
 
-    data = data.dropna(
-        subset=["order_id", "order_date", "unit_price"]
-    ).copy()
-
-    if data.empty:
-        return None
-
-    if "customer_id" not in data.columns:
-        data["customer_id"] = "Unknown"
-
-    if "quantity" not in data.columns:
-        data["quantity"] = 1
-
-    data["quantity"] = pd.to_numeric(
-        data["quantity"], errors="coerce"
-    ).fillna(0)
-
-    if "revenue" not in data.columns:
-        data["revenue"] = (
-            data["quantity"] * data["unit_price"]
-        )
-    else:
-        data["revenue"] = pd.to_numeric(
-            data["revenue"], errors="coerce"
-        )
-        data["revenue"] = data["revenue"].fillna(
-            data["quantity"] * data["unit_price"]
-        )
-
-    for col, default in {
-        "category": "Unclassified",
-        "region": "Unknown",
-        "product_name": "Unknown product",
-        "status": "Unknown",
-    }.items():
-        if col not in data.columns:
-            data[col] = default
-        else:
-            data[col] = data[col].fillna(default).astype(str)
-
-    data["month"] = data["order_date"].dt.to_period("M").astype(str)
-
-    return data
-
-
-real_data = load_database(str(DB_PATH))
-df = prepare_data(real_data)
-
-demo_mode = df is None
-
-if demo_mode:
-    df = make_demo_data()
-
-df = prepare_data(df)
+    return df
 
 
 # =========================================================
-# 4. DEMO AUTHENTICATION UI
+# 4. LOAD DATA
 # =========================================================
 
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-
-if "user_email" not in st.session_state:
-    st.session_state.user_email = "analyst@nova.demo"
+DB_PATH = Path(__file__).parent / "data" / "ecommerce.db"
 
 
-def login_screen():
-    st.markdown("<br><br>", unsafe_allow_html=True)
+def normalize_columns(df):
+    """Standardize common column names."""
 
-    left, right = st.columns([1.15, 0.85], gap="large")
+    df = df.copy()
+    df.columns = [
+        str(column).strip().lower().replace(" ", "_")
+        for column in df.columns
+    ]
 
-    with left:
-        st.markdown(
-            """
-            <div class="hero" style="padding:45px 35px; min-height:400px;">
-                <div class="eyebrow">✦ NOVA INTELLIGENCE</div>
-                <div class="hero-title" style="font-size:42px;">
-                    Your business.<br>Your next move.
-                </div>
-                <div class="hero-sub" style="font-size:15px; line-height:1.9;">
-                    One intelligent workspace to understand your sales,
-                    discover customer trends and make data-driven decisions.
-                </div>
-                <br>
-                <div style="color:#38E5C3; font-weight:700;">
-                    SALES ANALYTICS &nbsp; · &nbsp; CUSTOMER INSIGHTS
-                </div>
-                <br>
-                <div style="color:#B9C9DA;">
-                    Built for modern e-commerce teams.
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+    aliases = {
+        "orderid": "order_id",
+        "orderdate": "order_date",
+        "customerid": "customer_id",
+        "productname": "product",
+        "product_category": "category",
+        "sales": "revenue",
+        "total": "revenue",
+        "amount": "revenue",
+        "quantity_ordered": "quantity",
+        "unitprice": "unit_price",
+    }
 
-    with right:
-        st.markdown("### Welcome back")
-        st.caption("Sign in to access your analytics workspace.")
+    df = df.rename(
+        columns={
+            column: aliases[column]
+            for column in df.columns
+            if column in aliases
+        }
+    )
 
-        with st.form("login_form"):
-            email = st.text_input(
-                "Work email",
-                placeholder="you@company.com",
+    return df
+
+
+@st.cache_data
+def load_data(db_path):
+    """Load orders from SQLite when available."""
+
+    if not Path(db_path).exists():
+        return make_demo_data(), True
+
+    try:
+        with sqlite3.connect(db_path) as connection:
+            tables = pd.read_sql_query(
+                """
+                SELECT name
+                FROM sqlite_master
+                WHERE type='table'
+                """,
+                connection,
+            )["name"].tolist()
+
+            if "orders" not in tables:
+                return make_demo_data(), True
+
+            df = pd.read_sql_query(
+                "SELECT * FROM orders",
+                connection,
             )
 
-            password = st.text_input(
-                "Password",
-                type="password",
-                placeholder="Enter your password",
-            )
+        if df.empty:
+            return make_demo_data(), True
 
-            remember = st.checkbox("Remember me")
+        df = normalize_columns(df)
 
-            submitted = st.form_submit_button(
-                "Sign in →",
-                type="primary",
-                use_container_width=True,
-            )
+        required = {
+            "order_date",
+            "revenue",
+        }
 
-            if submitted:
-                if email.strip() and password:
-                    st.session_state.logged_in = True
-                    st.session_state.user_email = email.strip()
-                    st.rerun()
-                else:
-                    st.error("Enter an email and password to preview the dashboard.")
+        if not required.issubset(df.columns):
+            return make_demo_data(), True
 
-        st.info(
-            "Portfolio demo: this sign-in screen is a visual prototype. "
-            "It does not verify passwords or provide secure authentication."
+        if "order_id" not in df.columns:
+            df["order_id"] = [
+                f"ORD-{number:06d}"
+                for number in range(1, len(df) + 1)
+            ]
+
+        if "customer_id" not in df.columns:
+            df["customer_id"] = "Unknown"
+
+        if "product" not in df.columns:
+            df["product"] = "Unknown Product"
+
+        if "category" not in df.columns:
+            df["category"] = "Uncategorized"
+
+        if "region" not in df.columns:
+            df["region"] = "Unknown"
+
+        if "quantity" not in df.columns:
+            df["quantity"] = 1
+
+        if "unit_price" not in df.columns:
+            df["unit_price"] = df["revenue"]
+
+        if "discount" not in df.columns:
+            df["discount"] = 0
+
+        if "status" not in df.columns:
+            df["status"] = "Delivered"
+
+        df["order_date"] = pd.to_datetime(
+            df["order_date"],
+            errors="coerce",
         )
 
-        st.caption("NOVA · E-Commerce Analytics · Demo edition")
+        numeric_columns = [
+            "revenue",
+            "quantity",
+            "unit_price",
+            "discount",
+        ]
+
+        for column in numeric_columns:
+            df[column] = pd.to_numeric(
+                df[column],
+                errors="coerce",
+            ).fillna(0)
+
+        df = df.dropna(subset=["order_date"])
+
+        if df.empty:
+            return make_demo_data(), True
+
+        return df, False
+
+    except (
+        sqlite3.Error,
+        pd.errors.DatabaseError,
+        ValueError,
+        TypeError,
+    ):
+        return make_demo_data(), True
 
 
-if not st.session_state.logged_in:
-    login_screen()
-    st.stop()
-
-
-# =========================================================
-# 5. SIDEBAR & NAVIGATION
-# =========================================================
-
-with st.sidebar:
-    st.markdown(
-        """
-        <div class="nova-logo">NOVA</div>
-        <div class="nova-caption">E-Commerce Analytics</div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.divider()
-
-    st.markdown("**WORKSPACE**")
-
-    page = st.radio(
-        "Navigation",
-        [
-            "Overview",
-            "Sales Analytics",
-            "Products",
-            "Customers",
-            "Orders & Reports",
-            "Notifications",
-            "Account",
-        ],
-        label_visibility="collapsed",
-    )
-
-    st.divider()
-
-    st.markdown("**DATA SOURCE**")
-
-    if demo_mode:
-        st.warning("Demo dataset active")
-    else:
-        st.success("Database connected")
-
-    st.caption("NOVA Intelligence Platform")
-
-    if st.button("Sign out", use_container_width=True):
-        st.session_state.logged_in = False
-        st.rerun()
+df, demo_mode = load_data(str(DB_PATH))
 
 
 # =========================================================
-# 6. GLOBAL FILTERS
-# =========================================================
-
-min_date = df["order_date"].min().date()
-max_date = df["order_date"].max().date()
-
-with st.sidebar:
-    date_range = st.date_input(
-        "Analysis period",
-        value=(min_date, max_date),
-        min_value=min_date,
-        max_value=max_date,
-    )
-
-    if isinstance(date_range, (tuple, list)) and len(date_range) == 2:
-        start_date, end_date = date_range
-    else:
-        start_date, end_date = min_date, max_date
-
-    period_df = df[
-        df["order_date"].dt.date.between(start_date, end_date)
-    ].copy()
-
-    category_options = sorted(
-        period_df["category"].astype(str).unique()
-    )
-
-    selected_categories = st.multiselect(
-        "Categories",
-        category_options,
-        default=category_options,
-    )
-
-    region_options = sorted(
-        period_df["region"].astype(str).unique()
-    )
-
-    selected_regions = st.multiselect(
-        "Regions",
-        region_options,
-        default=region_options,
-    )
-
-filtered = period_df[
-    period_df["category"].astype(str).isin(selected_categories)
-    & period_df["region"].astype(str).isin(selected_regions)
-].copy()
-
-
-# =========================================================
-# 7. COMMON HELPERS
+# 5. GENERAL HELPERS
 # =========================================================
 
 def money(value):
-    return f"{value:,.2f}"
+    return f"${value:,.2f}"
 
 
-def metric(label, value, note, color=ACCENT):
+def number(value):
+    return f"{value:,.0f}"
+
+
+def section(title, subtitle=None):
+    st.markdown(
+        f"<h2 style='margin-bottom:4px'>{title}</h2>",
+        unsafe_allow_html=True,
+    )
+
+    if subtitle:
+        st.markdown(
+            f"<p style='margin-top:0'>{subtitle}</p>",
+            unsafe_allow_html=True,
+        )
+
+
+def make_chart_dark(fig, height=350):
+    fig.update_layout(
+        template="plotly_dark",
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(
+            color=TEXT,
+            family="Arial",
+        ),
+        height=height,
+        margin=dict(l=10, r=10, t=35, b=10),
+        legend=dict(
+            bgcolor="rgba(0,0,0,0)",
+        ),
+    )
+
+    fig.update_xaxes(
+        gridcolor=BORDER,
+        zerolinecolor=BORDER,
+    )
+
+    fig.update_yaxes(
+        gridcolor=BORDER,
+        zerolinecolor=BORDER,
+    )
+
+    return fig
+
+
+def kpi_card(label, value, caption=""):
     st.markdown(
         f"""
-        <div class="metric">
-            <div class="metric-label">{label}</div>
-            <div class="metric-value">{value}</div>
-            <div class="metric-foot" style="color:{color};">{note}</div>
+        <div class="nova-card">
+            <div class="nova-label">{label}</div>
+            <div class="nova-value">{value}</div>
+            <div class="nova-caption">{caption}</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
 
-def section(title, subtitle=""):
+def safe_sum(data, column):
+    if data.empty or column not in data.columns:
+        return 0
+    return float(data[column].sum())
+
+
+def safe_mean(data, column):
+    if data.empty or column not in data.columns:
+        return 0
+    return float(data[column].mean())
+
+
+# =========================================================
+# 6. SIDEBAR NAVIGATION
+# =========================================================
+
+with st.sidebar:
     st.markdown(
-        f'<div class="section-head">{title}</div>'
-        f'<div class="section-sub">{subtitle}</div>',
+        f"""
+        <div style="padding:10px 0 24px">
+            <div style="
+                color:{ACCENT};
+                font-size:12px;
+                font-weight:800;
+                letter-spacing:4px;
+            ">
+                NOVA
+            </div>
+            <div style="
+                color:{TEXT};
+                font-size:20px;
+                font-weight:800;
+                margin-top:5px;
+            ">
+                Analytics
+            </div>
+            <div style="
+                color:{MUTED};
+                font-size:11px;
+                margin-top:5px;
+            ">
+                E-COMMERCE INTELLIGENCE
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("---")
+
+    pages = [
+        "Overview",
+        "Sales Analytics",
+        "Products",
+        "Customers",
+        "Orders & Reports",
+        "Notifications",
+        "Account",
+    ]
+
+    page = st.radio(
+        "NAVIGATION",
+        pages,
+        label_visibility="visible",
+    )
+
+    st.markdown("---")
+    st.markdown("**DATA FILTERS**")
+
+    min_date = df["order_date"].min().date()
+    max_date = df["order_date"].max().date()
+
+    selected_dates = st.date_input(
+        "Order date range",
+        value=(min_date, max_date),
+        min_value=min_date,
+        max_value=max_date,
+    )
+
+    selected_categories = st.multiselect(
+        "Categories",
+        options=sorted(
+            df["category"].dropna().astype(str).unique()
+        ),
+        default=sorted(
+            df["category"].dropna().astype(str).unique()
+        ),
+    )
+
+    selected_regions = st.multiselect(
+        "Regions",
+        options=sorted(
+            df["region"].dropna().astype(str).unique()
+        ),
+        default=sorted(
+            df["region"].dropna().astype(str).unique()
+        ),
+    )
+
+    st.markdown("---")
+
+    st.markdown(
+        f"""
+        <div style="font-size:11px;color:{MUTED}">
+            WORKSPACE
+        </div>
+        <div style="font-size:13px;font-weight:700;margin-top:5px">
+            NOVA Analytics
+        </div>
+        <div style="font-size:11px;color:{ACCENT};margin-top:8px">
+            ● Dashboard available
+        </div>
+        """,
         unsafe_allow_html=True,
     )
 
 
-def style_fig(fig, height=350):
-    fig.update_layout(
-        template="plotly_dark",
-        paper_bgcolor=PANEL,
-        plot_bgcolor=PANEL,
-        font=dict(color=TEXT, family="Inter"),
-        height=height,
-        margin=dict(l=20, r=20, t=55, b=25),
-        legend=dict(
-            bgcolor="rgba(0,0,0,0)",
-            orientation="h",
-            y=-0.2,
-        ),
-        xaxis=dict(showgrid=False, zeroline=False),
-        yaxis=dict(gridcolor=BORDER, zeroline=False),
-    )
-    return fig
+# =========================================================
+# 7. APPLY FILTERS
+# =========================================================
+
+filtered_df = df.copy()
+
+if isinstance(selected_dates, (tuple, list)):
+    if len(selected_dates) == 2:
+        start_date, end_date = selected_dates
+
+        filtered_df = filtered_df[
+            (filtered_df["order_date"].dt.date >= start_date)
+            & (filtered_df["order_date"].dt.date <= end_date)
+        ]
+
+if selected_categories:
+    filtered_df = filtered_df[
+        filtered_df["category"].astype(str).isin(
+            selected_categories
+        )
+    ]
+else:
+    filtered_df = filtered_df.iloc[0:0]
+
+if selected_regions:
+    filtered_df = filtered_df[
+        filtered_df["region"].astype(str).isin(
+            selected_regions
+        )
+    ]
+else:
+    filtered_df = filtered_df.iloc[0:0]
 
 
 # =========================================================
-# 8. HEADER AND NOTIFICATIONS
+# 8. HEADER
 # =========================================================
 
-notifications = [
-    ("Revenue report", "Your analytics workspace is ready to explore.", "INFO"),
-    ("Customer insights", "Review your highest-value customers.", "INSIGHT"),
-    ("Data status", "Check the current dataset mode before sharing reports.", "SYSTEM"),
-]
+st.markdown(
+    f"""
+    <div class="nova-header">
+        <div class="nova-brand">
+            NOVA / BUSINESS INTELLIGENCE
+        </div>
+        <div class="nova-title">
+            E-Commerce Analytics
+        </div>
+        <div class="nova-subtitle">
+            Monitor sales performance, customer behavior,
+            product trends and order operations.
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
-header_left, header_right = st.columns([4, 1])
+header_left, header_right = st.columns([3, 1])
 
 with header_left:
     st.markdown(
         f"""
-        <div style="padding:5px 0 18px;">
-            <div style="color:{MUTED}; font-size:12px;">
-                NOVA / {page.upper()}
-            </div>
-            <div style="font-size:23px; font-weight:800; color:{TEXT};">
-                Good to see you again.
-            </div>
-            <div style="color:{MUTED}; font-size:12px; margin-top:5px;">
-                {datetime.now().strftime("%d %B %Y")}
-                &nbsp; · &nbsp; Business intelligence workspace
-            </div>
+        <div style="padding:5px 0 15px">
+            <span class="status-pill">● DASHBOARD ACTIVE</span>
         </div>
         """,
         unsafe_allow_html=True,
@@ -663,31 +728,772 @@ with header_left:
 with header_right:
     st.markdown(
         f"""
-        <div style="text-align:right; padding:8px 0;">
-            <div style="font-size:12px; color:{MUTED};">SIGNED IN AS</div>
-            <div style="font-size:13px; color:{ACCENT}; font-weight:700;">
-                {st.session_state.user_email}
+        <div style="text-align:right;padding:5px 0 15px">
+            <div style="font-size:11px;color:{MUTED}">
+                WORKSPACE STATUS
+            </div>
+            <div style="font-size:13px;color:{ACCENT};font-weight:700">
+                NOVA Analytics
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
+
+# =========================================================
+# 9. DEMO MODE NOTICE
+# =========================================================
+
 if demo_mode:
-    st.warning(
-        "DEMO MODE — sample data is displayed because a compatible database "
-        "was not detected. Do not present these figures as real business results."
+    st.markdown(
+        """
+        <div class="demo-banner">
+            <strong>DEMO MODE</strong> — Sample data is being displayed
+            because a compatible SQLite database was not found.
+            Figures shown in this mode are illustrative, not real business results.
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
-with st.expander("🔔 Notifications · 3 updates"):
-    for title, message, tag in notifications:
+
+# =========================================================
+# 10. OVERVIEW
+# =========================================================
+
+if page == "Overview":
+    section(
+        "Business Overview",
+        "A high-level view of your e-commerce performance.",
+    )
+
+    total_revenue = safe_sum(filtered_df, "revenue")
+    total_orders = len(filtered_df)
+    total_customers = filtered_df["customer_id"].nunique()
+    average_order = (
+        total_revenue / total_orders
+        if total_orders
+        else 0
+    )
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        kpi_card(
+            "TOTAL REVENUE",
+            money(total_revenue),
+            "Revenue for the selected filters",
+        )
+
+    with col2:
+        kpi_card(
+            "TOTAL ORDERS",
+            number(total_orders),
+            "Orders in the selected period",
+        )
+
+    with col3:
+        kpi_card(
+            "UNIQUE CUSTOMERS",
+            number(total_customers),
+            "Distinct customer IDs",
+        )
+
+    with col4:
+        kpi_card(
+            "AVERAGE ORDER VALUE",
+            money(average_order),
+            "Revenue divided by order count",
+        )
+
+    st.markdown("")
+
+    left, right = st.columns([1.65, 1])
+
+    with left:
+        section("Revenue Trend", "Revenue by month")
+
+        if not filtered_df.empty:
+            monthly = (
+                filtered_df
+                .assign(
+                    month=filtered_df["order_date"].dt.to_period("M")
+                    .astype(str)
+                )
+                .groupby("month", as_index=False)["revenue"]
+                .sum()
+                .sort_values("month")
+            )
+
+            fig = px.line(
+                monthly,
+                x="month",
+                y="revenue",
+                markers=True,
+                labels={
+                    "month": "Month",
+                    "revenue": "Revenue ($)",
+                },
+            )
+
+            fig.update_traces(
+                line=dict(color=ACCENT, width=3),
+                marker=dict(size=7),
+            )
+
+            st.plotly_chart(
+                make_chart_dark(fig),
+                use_container_width=True,
+            )
+        else:
+            st.info("No data matches the selected filters.")
+
+    with right:
+        section("Revenue by Category")
+
+        if not filtered_df.empty:
+            category_revenue = (
+                filtered_df
+                .groupby("category", as_index=False)["revenue"]
+                .sum()
+                .sort_values("revenue", ascending=False)
+            )
+
+            fig = px.pie(
+                category_revenue,
+                names="category",
+                values="revenue",
+                hole=0.62,
+            )
+
+            fig.update_traces(
+                textposition="inside",
+                textinfo="percent",
+            )
+
+            st.plotly_chart(
+                make_chart_dark(fig),
+                use_container_width=True,
+            )
+        else:
+            st.info("No category data available.")
+
+    st.markdown("")
+
+    left, right = st.columns(2)
+
+    with left:
+        section("Order Status")
+
+        if not filtered_df.empty:
+            status_counts = (
+                filtered_df["status"]
+                .fillna("Unknown")
+                .value_counts()
+                .rename_axis("status")
+                .reset_index(name="orders")
+            )
+
+            fig = px.bar(
+                status_counts,
+                x="status",
+                y="orders",
+                color="status",
+                labels={
+                    "status": "Order status",
+                    "orders": "Number of orders",
+                },
+            )
+
+            st.plotly_chart(
+                make_chart_dark(fig, 300),
+                use_container_width=True,
+            )
+        else:
+            st.info("No order status data available.")
+
+    with right:
+        section("Top Products")
+
+        if not filtered_df.empty:
+            top_products = (
+                filtered_df
+                .groupby("product", as_index=False)["revenue"]
+                .sum()
+                .nlargest(8, "revenue")
+                .sort_values("revenue")
+            )
+
+            fig = px.bar(
+                top_products,
+                x="revenue",
+                y="product",
+                orientation="h",
+                labels={
+                    "revenue": "Revenue ($)",
+                    "product": "Product",
+                },
+            )
+
+            fig.update_traces(marker_color=ACCENT_BLUE)
+
+            st.plotly_chart(
+                make_chart_dark(fig, 300),
+                use_container_width=True,
+            )
+        else:
+            st.info("No product data available.")
+
+
+# =========================================================
+# 11. SALES ANALYTICS
+# =========================================================
+
+elif page == "Sales Analytics":
+    section(
+        "Sales Analytics",
+        "Explore revenue, order volume and sales performance over time.",
+    )
+
+    if filtered_df.empty:
+        st.info("No sales data matches the selected filters.")
+    else:
+        total_revenue = safe_sum(filtered_df, "revenue")
+        total_orders = len(filtered_df)
+        average_order = (
+            total_revenue / total_orders
+            if total_orders
+            else 0
+        )
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.metric("Revenue", money(total_revenue))
+
+        with col2:
+            st.metric("Orders", number(total_orders))
+
+        with col3:
+            st.metric("Average Order Value", money(average_order))
+
+        st.markdown("")
+
+        sales = filtered_df.copy()
+        sales["month"] = (
+            sales["order_date"].dt.to_period("M").astype(str)
+        )
+
+        monthly_sales = (
+            sales.groupby("month", as_index=False)
+            .agg(
+                revenue=("revenue", "sum"),
+                orders=("order_id", "nunique"),
+            )
+            .sort_values("month")
+        )
+
+        section("Monthly Performance")
+
+        fig = go.Figure()
+
+        fig.add_trace(
+            go.Bar(
+                x=monthly_sales["month"],
+                y=monthly_sales["revenue"],
+                name="Revenue",
+                marker_color=ACCENT,
+            )
+        )
+
+        fig.add_trace(
+            go.Scatter(
+                x=monthly_sales["month"],
+                y=monthly_sales["orders"],
+                name="Orders",
+                mode="lines+markers",
+                yaxis="y2",
+                line=dict(color=ACCENT_BLUE, width=3),
+            )
+        )
+
+        fig.update_layout(
+            yaxis=dict(title="Revenue ($)"),
+            yaxis2=dict(
+                title="Orders",
+                overlaying="y",
+                side="right",
+                showgrid=False,
+            ),
+            legend=dict(orientation="h", y=1.12),
+        )
+
+        st.plotly_chart(
+            make_chart_dark(fig, 430),
+            use_container_width=True,
+        )
+
+        left, right = st.columns(2)
+
+        with left:
+            section("Revenue by Region")
+
+            region_sales = (
+                filtered_df
+                .groupby("region", as_index=False)["revenue"]
+                .sum()
+                .sort_values("revenue", ascending=False)
+            )
+
+            fig = px.bar(
+                region_sales,
+                x="region",
+                y="revenue",
+                labels={
+                    "region": "Region",
+                    "revenue": "Revenue ($)",
+                },
+            )
+
+            st.plotly_chart(
+                make_chart_dark(fig, 340),
+                use_container_width=True,
+            )
+
+        with right:
+            section("Discount Analysis")
+
+            discount_sales = (
+                filtered_df
+                .assign(
+                    discount_band=(
+                        filtered_df["discount"] * 100
+                    ).round().astype(int).astype(str) + "%"
+                )
+                .groupby("discount_band", as_index=False)
+                .agg(
+                    revenue=("revenue", "sum"),
+                    orders=("order_id", "nunique"),
+                )
+            )
+
+            fig = px.bar(
+                discount_sales,
+                x="discount_band",
+                y="revenue",
+                labels={
+                    "discount_band": "Discount",
+                    "revenue": "Revenue ($)",
+                },
+            )
+
+            st.plotly_chart(
+                make_chart_dark(fig, 340),
+                use_container_width=True,
+            )
+
+
+# =========================================================
+# 12. PRODUCTS
+# =========================================================
+
+elif page == "Products":
+    section(
+        "Product Intelligence",
+        "Analyze product revenue, quantity sold and category performance.",
+    )
+
+    if filtered_df.empty:
+        st.info("No product data matches the selected filters.")
+    else:
+        product_summary = (
+            filtered_df
+            .groupby(["product", "category"], as_index=False)
+            .agg(
+                revenue=("revenue", "sum"),
+                units_sold=("quantity", "sum"),
+                orders=("order_id", "nunique"),
+            )
+            .sort_values("revenue", ascending=False)
+        )
+
+        total_products = product_summary["product"].nunique()
+        total_units = product_summary["units_sold"].sum()
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.metric("Products", number(total_products))
+
+        with col2:
+            st.metric("Units Sold", number(total_units))
+
+        with col3:
+            st.metric(
+                "Top Product Revenue",
+                money(product_summary["revenue"].max()),
+            )
+
+        st.markdown("")
+
+        section("Top Products by Revenue")
+
+        top_products = product_summary.head(15).sort_values("revenue")
+
+        fig = px.bar(
+            top_products,
+            x="revenue",
+            y="product",
+            color="category",
+            orientation="h",
+            labels={
+                "revenue": "Revenue ($)",
+                "product": "Product",
+                "category": "Category",
+            },
+        )
+
+        st.plotly_chart(
+            make_chart_dark(fig, 500),
+            use_container_width=True,
+        )
+
+        section("Product Performance Table")
+
+        display_products = product_summary.copy()
+        display_products["revenue"] = (
+            display_products["revenue"].map(money)
+        )
+
+        st.dataframe(
+            display_products,
+            use_container_width=True,
+            hide_index=True,
+        )
+
+
+# =========================================================
+# 13. CUSTOMERS
+# =========================================================
+
+elif page == "Customers":
+    section(
+        "Customer Analytics",
+        "Understand customer contribution and purchasing behavior.",
+    )
+
+    if filtered_df.empty:
+        st.info("No customer data matches the selected filters.")
+    else:
+        customer_summary = (
+            filtered_df
+            .groupby("customer_id", as_index=False)
+            .agg(
+                revenue=("revenue", "sum"),
+                orders=("order_id", "nunique"),
+                last_order=("order_date", "max"),
+            )
+            .sort_values("revenue", ascending=False)
+        )
+
+        unique_customers = len(customer_summary)
+        repeat_customers = int(
+            (customer_summary["orders"] > 1).sum()
+        )
+        repeat_rate = (
+            repeat_customers / unique_customers * 100
+            if unique_customers
+            else 0
+        )
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.metric(
+                "Unique Customers",
+                number(unique_customers),
+            )
+
+        with col2:
+            st.metric(
+                "Repeat Customers",
+                number(repeat_customers),
+            )
+
+        with col3:
+            st.metric(
+                "Repeat Customer Rate",
+                f"{repeat_rate:.1f}%",
+            )
+
+        left, right = st.columns(2)
+
+        with left:
+            section("Top Customers")
+
+            top_customers = (
+                customer_summary.head(10)
+                .sort_values("revenue")
+            )
+
+            fig = px.bar(
+                top_customers,
+                x="revenue",
+                y="customer_id",
+                orientation="h",
+                labels={
+                    "revenue": "Revenue ($)",
+                    "customer_id": "Customer",
+                },
+            )
+
+            fig.update_traces(marker_color=ACCENT)
+
+            st.plotly_chart(
+                make_chart_dark(fig, 400),
+                use_container_width=True,
+            )
+
+        with right:
+            section("Orders per Customer")
+
+            order_distribution = (
+                customer_summary["orders"]
+                .value_counts()
+                .sort_index()
+                .rename_axis("orders_per_customer")
+                .reset_index(name="customers")
+            )
+
+            fig = px.bar(
+                order_distribution,
+                x="orders_per_customer",
+                y="customers",
+                labels={
+                    "orders_per_customer": "Number of orders",
+                    "customers": "Number of customers",
+                },
+            )
+
+            st.plotly_chart(
+                make_chart_dark(fig, 400),
+                use_container_width=True,
+            )
+
+        section("Customer Details")
+
+        display_customers = customer_summary.copy()
+        display_customers["revenue"] = (
+            display_customers["revenue"].map(money)
+        )
+        display_customers["last_order"] = (
+            display_customers["last_order"].dt.strftime("%Y-%m-%d")
+        )
+
+        st.dataframe(
+            display_customers,
+            use_container_width=True,
+            hide_index=True,
+        )
+
+
+# =========================================================
+# 14. ORDERS & REPORTS
+# =========================================================
+
+elif page == "Orders & Reports":
+    section(
+        "Orders & Reports",
+        "Search, inspect and export the filtered order records.",
+    )
+
+    if filtered_df.empty:
+        st.info("No orders match the selected filters.")
+    else:
+        search_term = st.text_input(
+            "Search orders",
+            placeholder="Enter order ID, customer ID or product name...",
+        )
+
+        orders_view = filtered_df.copy()
+
+        if search_term.strip():
+            term = search_term.strip().lower()
+
+            mask = (
+                orders_view["order_id"].astype(str).str.lower().str.contains(
+                    term, na=False
+                )
+                | orders_view["customer_id"].astype(str).str.lower().str.contains(
+                    term, na=False
+                )
+                | orders_view["product"].astype(str).str.lower().str.contains(
+                    term, na=False
+                )
+            )
+
+            orders_view = orders_view[mask]
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.metric("Matching Orders", number(len(orders_view)))
+
+        with col2:
+            st.metric("Revenue", money(safe_sum(orders_view, "revenue")))
+
+        with col3:
+            st.metric(
+                "Average Order",
+                money(
+                    safe_sum(orders_view, "revenue") / len(orders_view)
+                    if len(orders_view)
+                    else 0
+                ),
+            )
+
+        display_orders = orders_view.copy()
+
+        display_orders["order_date"] = (
+            display_orders["order_date"].dt.strftime("%Y-%m-%d")
+        )
+
+        display_orders["revenue"] = (
+            display_orders["revenue"].map(money)
+        )
+
+        st.dataframe(
+            display_orders,
+            use_container_width=True,
+            hide_index=True,
+        )
+
+        csv_data = orders_view.to_csv(index=False).encode("utf-8")
+
+        st.download_button(
+            label="Download filtered orders (CSV)",
+            data=csv_data,
+            file_name="nova_filtered_orders.csv",
+            mime="text/csv",
+            use_container_width=True,
+        )
+
+        st.markdown("")
+
+        section("Export Summary")
+
+        summary = pd.DataFrame(
+            {
+                "Metric": [
+                    "Number of orders",
+                    "Total revenue",
+                    "Unique customers",
+                    "Number of products",
+                ],
+                "Value": [
+                    len(orders_view),
+                    round(safe_sum(orders_view, "revenue"), 2),
+                    orders_view["customer_id"].nunique(),
+                    orders_view["product"].nunique(),
+                ],
+            }
+        )
+
+        st.dataframe(
+            summary,
+            use_container_width=True,
+            hide_index=True,
+        )
+
+        st.download_button(
+            label="Download summary (CSV)",
+            data=summary.to_csv(index=False).encode("utf-8"),
+            file_name="nova_summary.csv",
+            mime="text/csv",
+        )
+
+
+# =========================================================
+# 15. NOTIFICATIONS
+# =========================================================
+
+elif page == "Notifications":
+    section(
+        "Notifications & Insights",
+        "Review data quality notices and quick business observations.",
+    )
+
+    if demo_mode:
+        st.warning(
+            "The dashboard is using illustrative demo data. "
+            "Connect a compatible database before relying on the figures."
+        )
+    else:
+        st.success(
+            "A compatible SQLite database was loaded successfully."
+        )
+
+    if filtered_df.empty:
+        st.info(
+            "There are no orders in the current filter selection. "
+            "Try changing the date range, categories or regions."
+        )
+    else:
+        missing_values = int(
+            filtered_df.isna().sum().sum()
+        )
+
+        duplicate_orders = int(
+            filtered_df["order_id"].duplicated().sum()
+        )
+
+        if missing_values:
+            st.warning(
+                f"Missing values detected in the filtered dataset: "
+                f"{missing_values}."
+            )
+        else:
+            st.success("No missing values found in the filtered dataset.")
+
+        if duplicate_orders:
+            st.warning(
+                f"Potential duplicate order IDs: {duplicate_orders}."
+            )
+        else:
+            st.success("No duplicate order IDs found in the filtered dataset.")
+
+        top_category = (
+            filtered_df.groupby("category")["revenue"]
+            .sum()
+            .idxmax()
+        )
+
+        top_region = (
+            filtered_df.groupby("region")["revenue"]
+            .sum()
+            .idxmax()
+        )
+
         st.markdown(
             f"""
-            <div class="info-card" style="margin-bottom:8px;">
-                <strong>{title}</strong>
-                <span class="status-pill" style="float:right;">{tag}</span>
-                <div style="color:{MUTED}; font-size:12px; margin-top:7px;">
-                    {message}
+            <div class="nova-card">
+                <div class="nova-label">BUSINESS INSIGHT</div>
+                <div style="font-size:16px;font-weight:700;margin-top:10px">
+                    Best-performing category
+                </div>
+                <div style="color:{ACCENT};font-size:22px;font-weight:800">
+                    {top_category}
+                </div>
+            </div>
+
+            <div class="nova-card">
+                <div class="nova-label">GEOGRAPHIC INSIGHT</div>
+                <div style="font-size:16px;font-weight:700;margin-top:10px">
+                    Leading region by revenue
+                </div>
+                <div style="color:{ACCENT_BLUE};font-size:22px;font-weight:800">
+                    {top_region}
                 </div>
             </div>
             """,
@@ -696,537 +1502,92 @@ with st.expander("🔔 Notifications · 3 updates"):
 
 
 # =========================================================
-# 9. OVERVIEW
-# =========================================================
-
-if page == "Overview":
-    section(
-        "Executive Overview",
-        "A consolidated view of sales, customer activity and operations.",
-    )
-
-    revenue = filtered["revenue"].sum()
-    order_count = filtered["order_id"].nunique()
-    customer_count = filtered["customer_id"].nunique()
-    units = filtered["quantity"].sum()
-    aov = revenue / order_count if order_count else 0
-
-    k1, k2, k3, k4, k5 = st.columns(5)
-
-    with k1:
-        metric("TOTAL REVENUE", money(revenue), "Selected period")
-
-    with k2:
-        metric("ORDERS", f"{order_count:,}", "Unique orders", BLUE)
-
-    with k3:
-        metric("CUSTOMERS", f"{customer_count:,}", "Unique customer IDs", PURPLE)
-
-    with k4:
-        metric("AVERAGE ORDER", money(aov), "Revenue per order", ORANGE)
-
-    with k5:
-        metric("UNITS SOLD", f"{units:,.0f}", "Total quantity")
-
-    section("Revenue Intelligence", "Monthly trends and category contribution.")
-
-    left, right = st.columns([1.65, 1])
-
-    with left:
-        monthly = (
-            filtered.groupby("month", as_index=False)
-            .agg(revenue=("revenue", "sum"))
-            .sort_values("month")
-        )
-
-        fig = px.area(
-            monthly,
-            x="month",
-            y="revenue",
-            title="Revenue Evolution",
-            markers=True,
-            color_discrete_sequence=[ACCENT],
-        )
-
-        fig.update_traces(
-            fillcolor="rgba(56,229,195,0.13)",
-            line=dict(width=3),
-        )
-
-        st.plotly_chart(
-            style_fig(fig),
-            use_container_width=True,
-        )
-
-    with right:
-        category_data = (
-            filtered.groupby("category", as_index=False)
-            .agg(revenue=("revenue", "sum"))
-            .sort_values("revenue", ascending=False)
-        )
-
-        fig = px.pie(
-            category_data,
-            names="category",
-            values="revenue",
-            hole=0.66,
-            title="Category Mix",
-            color_discrete_sequence=[
-                ACCENT, BLUE, PURPLE, ORANGE, "#F472B6"
-            ],
-        )
-
-        fig.update_layout(
-            template="plotly_dark",
-            paper_bgcolor=PANEL,
-            font=dict(color=TEXT),
-            height=350,
-            margin=dict(l=15, r=15, t=55, b=20),
-        )
-
-        st.plotly_chart(fig, use_container_width=True)
-
-    section("Markets & Products", "Identify your strongest regions and products.")
-
-    left, right = st.columns(2)
-
-    with left:
-        regional = (
-            filtered.groupby("region", as_index=False)
-            .agg(revenue=("revenue", "sum"))
-            .sort_values("revenue")
-        )
-
-        fig = px.bar(
-            regional,
-            x="revenue",
-            y="region",
-            orientation="h",
-            title="Revenue by Region",
-            color="revenue",
-            color_continuous_scale=["#164E63", ACCENT],
-        )
-
-        fig.update_layout(coloraxis_showscale=False)
-
-        st.plotly_chart(
-            style_fig(fig, 330),
-            use_container_width=True,
-        )
-
-    with right:
-        products = (
-            filtered.groupby("product_name", as_index=False)
-            .agg(
-                revenue=("revenue", "sum"),
-                units=("quantity", "sum"),
-            )
-            .sort_values("revenue", ascending=False)
-            .head(8)
-            .sort_values("revenue")
-        )
-
-        fig = px.bar(
-            products,
-            x="revenue",
-            y="product_name",
-            orientation="h",
-            title="Top Products",
-            color="revenue",
-            color_continuous_scale=["#164E63", ACCENT],
-        )
-
-        fig.update_layout(coloraxis_showscale=False)
-
-        st.plotly_chart(
-            style_fig(fig, 330),
-            use_container_width=True,
-        )
-
-    section("Recent Orders", "Latest transactions in the selected dataset.")
-
-    recent = filtered.sort_values(
-        "order_date", ascending=False
-    ).head(10).copy()
-
-    recent["order_date"] = recent["order_date"].dt.strftime("%Y-%m-%d")
-
-    st.dataframe(
-        recent[
-            [
-                "order_id", "order_date", "customer_id",
-                "product_name", "category", "region",
-                "quantity", "revenue", "status",
-            ]
-        ],
-        use_container_width=True,
-        hide_index=True,
-    )
-
-
-# =========================================================
-# 10. SALES ANALYTICS
-# =========================================================
-
-elif page == "Sales Analytics":
-    section(
-        "Sales Analytics",
-        "Explore sales patterns, order value and business performance.",
-    )
-
-    total_revenue = filtered["revenue"].sum()
-    order_count = filtered["order_id"].nunique()
-    avg_order = total_revenue / order_count if order_count else 0
-
-    a, b, c = st.columns(3)
-
-    with a:
-        metric("REVENUE", money(total_revenue), "Filtered revenue")
-
-    with b:
-        metric("ORDERS", f"{order_count:,}", "Distinct orders", BLUE)
-
-    with c:
-        metric("AVERAGE ORDER VALUE", money(avg_order), "Revenue / orders", PURPLE)
-
-    monthly = (
-        filtered.groupby("month", as_index=False)
-        .agg(
-            revenue=("revenue", "sum"),
-            orders=("order_id", "nunique"),
-        )
-        .sort_values("month")
-    )
-
-    fig = go.Figure()
-
-    fig.add_trace(
-        go.Scatter(
-            x=monthly["month"],
-            y=monthly["revenue"],
-            mode="lines+markers",
-            name="Revenue",
-            line=dict(color=ACCENT, width=3),
-            fill="tozeroy",
-            fillcolor="rgba(56,229,195,0.08)",
-        )
-    )
-
-    fig.update_layout(title="Revenue Trend Over Time")
-
-    st.plotly_chart(
-        style_fig(fig, 400),
-        use_container_width=True,
-    )
-
-    fig = px.bar(
-        monthly,
-        x="month",
-        y="orders",
-        title="Monthly Order Volume",
-        color_discrete_sequence=[BLUE],
-    )
-
-    st.plotly_chart(
-        style_fig(fig),
-        use_container_width=True,
-    )
-
-    st.dataframe(monthly, use_container_width=True, hide_index=True)
-
-
-# =========================================================
-# 11. PRODUCTS
-# =========================================================
-
-elif page == "Products":
-    section(
-        "Product Intelligence",
-        "Analyze product performance, volume and category contribution.",
-    )
-
-    products = (
-        filtered.groupby(["product_name", "category"], as_index=False)
-        .agg(
-            revenue=("revenue", "sum"),
-            units=("quantity", "sum"),
-            orders=("order_id", "nunique"),
-        )
-        .sort_values("revenue", ascending=False)
-    )
-
-    left, right = st.columns(2)
-
-    with left:
-        fig = px.bar(
-            products.head(12).sort_values("revenue"),
-            x="revenue",
-            y="product_name",
-            orientation="h",
-            title="Top 12 Products by Revenue",
-            color_discrete_sequence=[ACCENT],
-        )
-
-        st.plotly_chart(
-            style_fig(fig, 430),
-            use_container_width=True,
-        )
-
-    with right:
-        fig = px.scatter(
-            products,
-            x="units",
-            y="revenue",
-            size="orders",
-            color="category",
-            hover_name="product_name",
-            title="Product Revenue vs Units Sold",
-        )
-
-        st.plotly_chart(
-            style_fig(fig, 430),
-            use_container_width=True,
-        )
-
-    st.dataframe(
-        products,
-        use_container_width=True,
-        hide_index=True,
-    )
-
-
-# =========================================================
-# 12. CUSTOMERS
-# =========================================================
-
-elif page == "Customers":
-    section(
-        "Customer Intelligence",
-        "Understand customer value and purchasing behavior.",
-    )
-
-    customers = (
-        filtered.groupby("customer_id", as_index=False)
-        .agg(
-            revenue=("revenue", "sum"),
-            orders=("order_id", "nunique"),
-            units=("quantity", "sum"),
-        )
-        .sort_values("revenue", ascending=False)
-    )
-
-    a, b, c = st.columns(3)
-
-    with a:
-        metric("CUSTOMERS", f"{len(customers):,}", "Unique customer IDs")
-
-    with b:
-        metric(
-            "REVENUE / CUSTOMER",
-            money(customers["revenue"].mean()) if len(customers) else "0.00",
-            "Average customer revenue",
-            BLUE,
-        )
-
-    with c:
-        metric(
-            "REPEAT CUSTOMERS",
-            f"{int((customers['orders'] > 1).sum()):,}",
-            "More than one distinct order",
-            PURPLE,
-        )
-
-    left, right = st.columns(2)
-
-    with left:
-        fig = px.histogram(
-            customers,
-            x="revenue",
-            nbins=25,
-            title="Customer Revenue Distribution",
-            color_discrete_sequence=[ACCENT],
-        )
-
-        st.plotly_chart(
-            style_fig(fig),
-            use_container_width=True,
-        )
-
-    with right:
-        fig = px.scatter(
-            customers,
-            x="orders",
-            y="revenue",
-            title="Orders vs Customer Revenue",
-            color_discrete_sequence=[BLUE],
-        )
-
-        st.plotly_chart(
-            style_fig(fig),
-            use_container_width=True,
-        )
-
-    st.markdown("### Highest-value customers")
-
-    st.dataframe(
-        customers.head(20),
-        use_container_width=True,
-        hide_index=True,
-    )
-
-
-# =========================================================
-# 13. ORDERS & REPORTS
-# =========================================================
-
-elif page == "Orders & Reports":
-    section(
-        "Orders & Reports",
-        "Inspect transactions and export filtered records.",
-    )
-
-    statuses = (
-        filtered.groupby("status", as_index=False)
-        .agg(orders=("order_id", "nunique"))
-        .sort_values("orders", ascending=False)
-    )
-
-    fig = px.bar(
-        statuses,
-        x="status",
-        y="orders",
-        color="status",
-        title="Order Status Distribution",
-    )
-
-    st.plotly_chart(
-        style_fig(fig),
-        use_container_width=True,
-    )
-
-    search = st.text_input(
-        "Search order, customer or product",
-        placeholder="Enter a keyword...",
-    )
-
-    view = filtered.copy()
-
-    if search.strip():
-        mask = view.astype(str).apply(
-            lambda col: col.str.contains(
-                search.strip(),
-                case=False,
-                na=False,
-            )
-        ).any(axis=1)
-
-        view = view[mask]
-
-    st.dataframe(
-        view,
-        use_container_width=True,
-        hide_index=True,
-    )
-
-    st.download_button(
-        "⬇ Download CSV report",
-        data=view.to_csv(index=False).encode("utf-8"),
-        file_name="nova_ecommerce_report.csv",
-        mime="text/csv",
-        use_container_width=True,
-    )
-
-
-# =========================================================
-# 14. NOTIFICATIONS
-# =========================================================
-
-elif page == "Notifications":
-    section(
-        "Notification Center",
-        "A centralized place for system messages and business insights.",
-    )
-
-    st.markdown(
-        f"""
-        <div class="info-card">
-            <div style="color:{ACCENT}; font-size:11px; font-weight:800;">
-                SYSTEM · WORKSPACE
-            </div>
-            <h3>Welcome to NOVA</h3>
-            <div style="color:{MUTED};">
-                Your analytics workspace is ready.
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.write("")
-
-    st.info(
-        "Demo notification: connect a real notification service or configure "
-        "business rules to receive genuine alerts."
-    )
-
-    if st.button("Mark demo notifications as read"):
-        st.success("Demo notifications marked as read for this session.")
-
-
-# =========================================================
-# 15. ACCOUNT
+# 16. ACCOUNT / WORKSPACE
 # =========================================================
 
 elif page == "Account":
     section(
-        "Account & Preferences",
-        "View the current demo session and workspace status.",
+        "Workspace & Preferences",
+        "Application information and current data source.",
+    )
+
+    source_name = (
+        "Demo dataset"
+        if demo_mode
+        else "SQLite database"
     )
 
     st.markdown(
         f"""
-        <div class="info-card">
-            <div style="color:{MUTED}; font-size:11px;">SIGNED-IN EMAIL</div>
-            <div style="font-size:20px; font-weight:800; margin:8px 0 18px;">
-                {st.session_state.user_email}
-            </div>
-            <div style="color:{MUTED}; font-size:11px;">APPLICATION</div>
-            <div style="font-size:15px; font-weight:700; margin:8px 0 18px;">
+        <div class="nova-card">
+            <div class="nova-label">APPLICATION</div>
+            <div style="font-size:22px;font-weight:800;margin:8px 0 22px">
                 NOVA | E-Commerce Analytics
             </div>
-            <div style="color:{MUTED}; font-size:11px;">DATA SOURCE</div>
-            <div style="font-size:15px; font-weight:700; margin-top:8px;">
-                {"Demo data" if demo_mode else "SQLite database"}
+
+            <div class="nova-label">ACCESS</div>
+            <div style="font-size:15px;font-weight:700;margin:8px 0 22px">
+                Open dashboard — no login required
+            </div>
+
+            <div class="nova-label">DATA SOURCE</div>
+            <div style="font-size:15px;font-weight:700;margin:8px 0 22px">
+                {source_name}
+            </div>
+
+            <div class="nova-label">DATABASE PATH</div>
+            <div style="font-size:13px;margin-top:8px;overflow-wrap:anywhere">
+                {DB_PATH}
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    st.write("")
-    st.warning(
-        "The current login is a demonstration only. "
-        "It does not implement secure user authentication, password storage, "
-        "password reset or multi-user permissions."
+    st.markdown("")
+
+    st.markdown(
+        f"""
+        <div class="nova-card">
+            <div class="nova-label">ABOUT NOVA</div>
+            <p style="margin-top:12px">
+                NOVA is an e-commerce analytics dashboard for exploring
+                sales, products, customers and order operations.
+            </p>
+            <p>
+                Use the sidebar to navigate between pages and apply
+                filters to the displayed results.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
 
 # =========================================================
-# 16. FOOTER
+# 17. FOOTER
 # =========================================================
 
-st.divider()
+st.markdown("---")
 
-st.markdown(
-    f"""
-    <div style="text-align:center; padding:12px; color:{MUTED}; font-size:11px;">
-        <span style="color:{ACCENT}; font-weight:800; letter-spacing:2px;">
-            NOVA
-        </span>
-        &nbsp; | &nbsp; E-Commerce Analytics
-        <br><br>
-        SALES INTELLIGENCE · CUSTOMER INSIGHTS · BUSINESS PERFORMANCE
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+footer_left, footer_right = st.columns(2)
+
+with footer_left:
+    st.markdown(
+        f"""
+        <div style="font-size:11px;color:{MUTED}">
+            NOVA | E-COMMERCE ANALYTICS
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+with footer_right:
+    st.markdown(
+        f"""
+        <div style="font-size:11px;color:{MUTED};text-align:right">
+            BUSINESS INTELLIGENCE · DATA ANALYTICS
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )

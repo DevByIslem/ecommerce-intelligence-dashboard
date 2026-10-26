@@ -1,306 +1,131 @@
 
 import sqlite3
 from pathlib import Path
-from html import escape
 
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 
-# ============================================================
-# NEXUS COMMERCE INTELLIGENCE
-# Premium Dark | Navy + Turquoise
-# SQLite | Pandas | Plotly | Streamlit
-# ============================================================
+
+# =========================================================
+# 1. CONFIGURATION
+# =========================================================
 
 st.set_page_config(
-    page_title="NEXUS | Commerce Intelligence",
-    page_icon="📊",
+    page_title="NOVA | E-Commerce Analytics",
+    page_icon="✦",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# ------------------------- THEME -----------------------------
+DB_PATH = Path("data/ecommerce.db")
 
-BG = "#08111F"
-SIDEBAR = "#0B1728"
-PANEL = "#101F32"
-PANEL_ALT = "#14263B"
-BORDER = "#263A50"
-TEXT = "#F3F7FC"
-MUTED = "#93A8BE"
-TEAL = "#42E8C4"
-BLUE = "#70A7FF"
-PURPLE = "#B59AFF"
-AMBER = "#FFC76A"
-RED = "#FF8297"
+BG = "#0B1120"
+PANEL = "#111B2E"
+ACCENT = "#25D9C3"
+BLUE = "#6495FF"
+TEXT = "#F1F5F9"
+MUTED = "#91A1B7"
 
-BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR / "data" / "ecommerce.db"
 
-# ------------------------- DESIGN ---------------------------
+# =========================================================
+# 2. DESIGN
+# =========================================================
 
 st.markdown(
     f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
-
-    :root {{
-        --bg: {BG};
-        --panel: {PANEL};
-        --border: {BORDER};
-        --text: {TEXT};
-        --muted: {MUTED};
-        --teal: {TEAL};
-    }}
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
     html, body, [class*="css"] {{
-        font-family: 'DM Sans', sans-serif;
+        font-family: 'Inter', sans-serif;
     }}
 
     .stApp {{
-        color: var(--text);
-        background:
-            radial-gradient(ellipse at 80% -10%,
-            rgba(66,232,196,.10), transparent 34%),
-            {BG};
-    }}
-
-    [data-testid="stHeader"] {{
-        background: rgba(8,17,31,.88);
+        background: {BG};
+        color: {TEXT};
     }}
 
     [data-testid="stSidebar"] {{
-        background: {SIDEBAR};
-        border-right: 1px solid {BORDER};
+        background: #0D1728;
+        border-right: 1px solid #233149;
     }}
 
-    .block-container {{
-        max-width: 1500px;
-        padding-top: 1.4rem;
-        padding-bottom: 2.5rem;
-    }}
-
-    h1, h2, h3, h4 {{
-        font-family: 'Manrope', sans-serif;
-        color: {TEXT};
-        letter-spacing: -.5px;
-    }}
-
-    p, label {{
+    [data-testid="stSidebar"] * {{
         color: {TEXT};
     }}
 
-    [data-testid="stMetric"] {{
-        background: linear-gradient(145deg, {PANEL_ALT}, {PANEL});
-        border: 1px solid {BORDER};
-        border-radius: 16px;
-        padding: 16px 18px;
-        min-height: 112px;
+    .nova-hero {{
+        background: linear-gradient(120deg, #14263D 0%, #102D3B 55%, #123A42 100%);
+        border: 1px solid #25465A;
+        border-radius: 20px;
+        padding: 30px 32px;
+        margin-bottom: 24px;
     }}
 
-    [data-testid="stMetricLabel"] p {{
-        color: {MUTED} !important;
-        font-size: 10px !important;
-        font-weight: 700;
-        letter-spacing: 1.15px;
-        text-transform: uppercase;
-    }}
-
-    [data-testid="stMetricValue"] {{
-        color: {TEXT} !important;
-        font-family: 'Manrope', sans-serif;
-        font-weight: 800;
-    }}
-
-    [data-testid="stMetricDelta"] {{
+    .nova-label {{
+        color: {ACCENT};
         font-size: 12px;
-    }}
-
-    .brand {{
-        display: flex;
-        align-items: center;
-        gap: 11px;
-        padding: 5px 0 18px;
-    }}
-
-    .brand-mark {{
-        width: 41px;
-        height: 41px;
-        border-radius: 13px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, {TEAL}, #8AF5DB);
-        color: {BG};
-        font-size: 22px;
-        font-weight: 900;
-        box-shadow: 0 8px 24px rgba(66,232,196,.16);
-    }}
-
-    .brand-name {{
-        color: {TEXT};
-        font: 800 18px 'Manrope', sans-serif;
-        letter-spacing: -.5px;
-    }}
-
-    .brand-sub {{
-        color: {MUTED};
-        font-size: 9px;
-        letter-spacing: 1.7px;
-        text-transform: uppercase;
-    }}
-
-    .hero {{
-        border: 1px solid {BORDER};
-        border-radius: 22px;
-        padding: 27px 29px;
-        margin-bottom: 22px;
-        background:
-            radial-gradient(circle at 85% 15%,
-                rgba(66,232,196,.16), transparent 28%),
-            radial-gradient(circle at 100% 100%,
-                rgba(112,167,255,.10), transparent 34%),
-            linear-gradient(125deg, #12243A, #0D1B2B 65%, #102A35);
-    }}
-
-    .hero-eyebrow {{
-        color: {TEAL};
-        font-size: 10px;
         font-weight: 800;
-        letter-spacing: 2px;
+        letter-spacing: 3px;
         text-transform: uppercase;
     }}
 
-    .hero-title {{
-        margin-top: 14px;
-        color: {TEXT};
-        font: 800 clamp(28px, 3.2vw, 41px)/1.2 'Manrope', sans-serif;
-        letter-spacing: -1.3px;
-    }}
-
-    .hero-title span {{
-        color: {TEAL};
-    }}
-
-    .hero-copy {{
-        max-width: 780px;
-        margin-top: 12px;
-        color: {MUTED};
-        font-size: 13px;
-        line-height: 1.8;
-    }}
-
-    .chips {{
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 18px;
-    }}
-
-    .chip {{
-        display: inline-block;
-        padding: 6px 10px;
-        border: 1px solid #30465D;
-        border-radius: 999px;
-        background: rgba(7,17,30,.32);
-        color: #D0DCE9;
-        font-size: 10px;
-        font-weight: 600;
-    }}
-
-    .eyebrow {{
-        margin: 26px 0 5px;
-        color: {TEAL};
-        font-size: 10px;
+    .nova-title {{
+        font-size: 34px;
         font-weight: 800;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-    }}
-
-    .section-heading {{
-        margin-bottom: 4px;
         color: {TEXT};
-        font: 700 21px 'Manrope', sans-serif;
-        letter-spacing: -.5px;
+        margin: 10px 0 6px 0;
     }}
 
-    .section-note {{
-        margin-bottom: 15px;
-        color: {MUTED};
-        font-size: 12px;
-        line-height: 1.6;
+    .nova-subtitle {{
+        font-size: 14px;
+        color: #B8C7D9;
     }}
 
-    .insight-card {{
-        min-height: 139px;
-        padding: 17px 18px;
-        border: 1px solid {BORDER};
+    .metric-card {{
+        background: {PANEL};
+        border: 1px solid #24334A;
         border-radius: 15px;
-        background: linear-gradient(145deg, {PANEL_ALT}, {PANEL});
+        padding: 20px;
+        min-height: 125px;
     }}
 
-    .insight-label {{
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 1.4px;
-        text-transform: uppercase;
-    }}
-
-    .insight-value {{
-        margin-top: 10px;
-        color: {TEXT};
-        font: 800 20px 'Manrope', sans-serif;
-        overflow-wrap: anywhere;
-    }}
-
-    .insight-description {{
-        margin-top: 7px;
+    .metric-label {{
         color: {MUTED};
-        font-size: 11px;
-        line-height: 1.7;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }}
+
+    .metric-value {{
+        color: {TEXT};
+        font-size: 27px;
+        font-weight: 800;
+        margin-top: 12px;
+    }}
+
+    .metric-note {{
+        color: {ACCENT};
+        font-size: 12px;
+        margin-top: 6px;
     }}
 
     div[data-testid="stPlotlyChart"] {{
-        padding: 5px;
-        border: 1px solid {BORDER};
-        border-radius: 16px;
         background: {PANEL};
+        border: 1px solid #24334A;
+        border-radius: 15px;
+        padding: 8px;
     }}
 
-    div[data-testid="stDataFrame"] {{
-        overflow: hidden;
-        border: 1px solid {BORDER};
-        border-radius: 12px;
+    h1, h2, h3 {{
+        color: {TEXT};
     }}
 
-    .stDownloadButton button {{
-        border: 1px solid {TEAL} !important;
-        border-radius: 10px !important;
-        background: rgba(66,232,196,.08) !important;
-        color: {TEAL} !important;
-        font-weight: 700 !important;
-    }}
-
-    .stDownloadButton button:hover {{
-        background: rgba(66,232,196,.17) !important;
-        color: {TEXT} !important;
-    }}
-
-    div[data-testid="stExpander"] {{
-        border: 1px solid {BORDER};
-        border-radius: 12px;
-        background: rgba(16,31,50,.55);
-    }}
-
-    .footer {{
-        margin-top: 35px;
-        padding-top: 17px;
-        border-top: 1px solid {BORDER};
+    .stCaption {{
         color: {MUTED};
-        font-size: 10px;
-        line-height: 1.9;
-        text-align: center;
     }}
 
     </style>
@@ -308,788 +133,493 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ------------------------- DATA -----------------------------
+
+# =========================================================
+# 3. CHARGEMENT DES DONNÉES
+# =========================================================
 
 @st.cache_data
-def load_data(db_path: str, modified_time: float) -> pd.DataFrame:
-    """Load delivered orders from the existing SQLite database."""
-    del modified_time  # Included in the cache key to refresh when DB changes.
+def load_data():
+    if not DB_PATH.exists():
+        return None, f"Base de données introuvable : {DB_PATH}"
 
-    with sqlite3.connect(db_path) as connection:
-        data = pd.read_sql_query(
-            """
-            SELECT
-                order_id,
-                order_date,
-                customer_id,
-                product_name,
-                category,
-                region,
-                quantity,
-                unit_price,
-                discount,
-                status,
-                revenue
-            FROM orders
-            WHERE status = 'Delivered'
-            """,
-            connection,
-        )
+    try:
+        with sqlite3.connect(DB_PATH) as connection:
+            tables = pd.read_sql_query(
+                "SELECT name FROM sqlite_master WHERE type='table'",
+                connection,
+            )
 
-    if data.empty:
-        return data
+            if "orders" not in tables["name"].tolist():
+                return None, "La table 'orders' n'existe pas dans la base."
 
-    data["order_date"] = pd.to_datetime(
-        data["order_date"], errors="coerce"
-    )
+            data = pd.read_sql_query(
+                'SELECT * FROM "orders"',
+                connection,
+            )
 
-    for column in ["quantity", "unit_price", "discount", "revenue"]:
-        data[column] = pd.to_numeric(
-            data[column], errors="coerce"
-        ).fillna(0)
+        if data.empty:
+            return None, "La table orders ne contient aucune donnée."
 
-    for column in ["product_name", "category", "region"]:
-        data[column] = data[column].fillna("Unknown").astype(str)
+        return data, None
 
-    data = data.dropna(subset=["order_date"]).copy()
-    return data
+    except Exception as error:
+        return None, f"Erreur lors du chargement des données : {error}"
 
 
-if not DB_PATH.exists():
-    st.error(f"Database not found: `{DB_PATH}`")
-    st.info(
-        "Vérifie que le fichier SQLite existe dans le dossier "
-        "`data/ecommerce.db`."
-    )
-    st.stop()
+df, load_error = load_data()
 
-try:
-    df = load_data(str(DB_PATH), DB_PATH.stat().st_mtime)
-except Exception as exc:
-    st.error(f"Impossible de charger la base SQLite : {exc}")
-    st.info(
-        "Vérifie le nom de la table et les colonnes utilisées "
-        "dans la requête SQL."
-    )
-    st.stop()
 
-if df.empty:
-    st.warning("Aucune commande livrée n'a été trouvée dans la base.")
-    st.stop()
-
-# ------------------------- SIDEBAR --------------------------
-
-with st.sidebar:
-    st.markdown(
-        f"""
-        <div class="brand">
-            <div class="brand-mark">N</div>
-            <div>
-                <div class="brand-name">NEXUS</div>
-                <div class="brand-sub">Commerce Intelligence</div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.markdown("---")
-    st.markdown("##### CONTROL CENTER")
-    st.caption("Affinez les données affichées.")
-
-    all_regions = sorted(df["region"].unique().tolist())
-    all_categories = sorted(df["category"].unique().tolist())
-
-    selected_regions = st.multiselect(
-        "🌍 Regions",
-        options=all_regions,
-        default=all_regions,
-    )
-
-    selected_categories = st.multiselect(
-        "▦ Categories",
-        options=all_categories,
-        default=all_categories,
-    )
-
-    min_date = df["order_date"].min().date()
-    max_date = df["order_date"].max().date()
-
-    date_range = st.date_input(
-        "◷ Analysis period",
-        value=(min_date, max_date),
-        min_value=min_date,
-        max_value=max_date,
-    )
-
-    if isinstance(date_range, (tuple, list)):
-        if len(date_range) >= 2:
-            start_date, end_date = date_range[0], date_range[1]
-        elif len(date_range) == 1:
-            start_date = end_date = date_range[0]
-        else:
-            start_date, end_date = min_date, max_date
-    else:
-        start_date = end_date = date_range
-
-    if start_date > end_date:
-        start_date, end_date = end_date, start_date
-
-    st.markdown("---")
-    st.markdown("##### DATA STATUS")
-
-    st.markdown(
-        f"<span style='color:{TEAL};font-size:11px;font-weight:700'>"
-        "● Connected</span>",
-        unsafe_allow_html=True,
-    )
-    st.caption("Source · SQLite")
-    st.caption("Order status · Delivered")
-    st.caption("Dataset · Existing project database")
-
-    if st.button("↻ Refresh dashboard", use_container_width=True):
-        st.cache_data.clear()
-        st.rerun()
-
-    st.markdown("---")
-    st.caption("Python · Pandas · Plotly · Streamlit")
-
-# ------------------------- FILTERS --------------------------
-
-filtered = df[
-    df["region"].isin(selected_regions)
-    & df["category"].isin(selected_categories)
-    & (df["order_date"].dt.date >= start_date)
-    & (df["order_date"].dt.date <= end_date)
-].copy()
-
-if filtered.empty:
-    st.markdown(
-        f"""
-        <div class="hero">
-            <div class="hero-eyebrow">NEXUS / COMMERCE INTELLIGENCE</div>
-            <div class="hero-title">No results <span>found.</span></div>
-            <div class="hero-copy">
-                Aucune commande ne correspond à cette sélection.
-                Modifie la période, les régions ou les catégories.
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.stop()
-
-# ------------------------- KPI ------------------------------
-
-total_revenue = float(filtered["revenue"].sum())
-total_orders = int(filtered["order_id"].nunique())
-unique_customers = int(filtered["customer_id"].nunique())
-total_units = float(filtered["quantity"].sum())
-
-average_order_value = (
-    total_revenue / total_orders if total_orders else 0
-)
-
-quantity_for_discount = float(filtered["quantity"].sum())
-
-weighted_discount = (
-    float(
-        (filtered["discount"] * filtered["quantity"]).sum()
-        / quantity_for_discount
-    )
-    if quantity_for_discount > 0
-    else 0
-)
-
-# Compare with the immediately preceding period of equal duration.
-current_start = pd.Timestamp(start_date).normalize()
-current_end = pd.Timestamp(end_date).normalize()
-period_days = (current_end - current_start).days + 1
-
-previous_start = current_start - pd.Timedelta(days=period_days)
-previous_end = current_start - pd.Timedelta(days=1)
-
-previous_period = df[
-    df["region"].isin(selected_regions)
-    & df["category"].isin(selected_categories)
-    & (df["order_date"].dt.normalize() >= previous_start)
-    & (df["order_date"].dt.normalize() <= previous_end)
-].copy()
-
-previous_revenue = float(previous_period["revenue"].sum())
-
-revenue_growth = (
-    (total_revenue - previous_revenue) / previous_revenue * 100
-    if previous_revenue > 0
-    else None
-)
-
-# ------------------------- HERO -----------------------------
+# =========================================================
+# 4. EN-TÊTE
+# =========================================================
 
 st.markdown(
-    f"""
-    <div class="hero">
-        <div class="hero-eyebrow">
-            ◉ &nbsp; Business Intelligence / Performance Monitor
-        </div>
-        <div class="hero-title">Commerce, <span>decoded.</span></div>
-        <div class="hero-copy">
-            A clear view of e-commerce performance. Track revenue,
-            understand customer activity, compare category and regional
-            results, and uncover business signals through interactive analytics.
-        </div>
-        <div class="chips">
-            <span class="chip">✦ Executive overview</span>
-            <span class="chip">◷ {start_date:%d %b %Y} — {end_date:%d %b %Y}</span>
-            <span class="chip">▤ Delivered orders only</span>
-            <span class="chip">⌘ Interactive analytics</span>
+    """
+    <div class="nova-hero">
+        <div class="nova-label">✦ NOVA ANALYTICS PLATFORM</div>
+        <div class="nova-title">NOVA | E-Commerce Analytics</div>
+        <div class="nova-subtitle">
+            Interactive business intelligence · Sales performance · Customer insights
         </div>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-# ------------------------- OVERVIEW -------------------------
 
-st.markdown(
-    '<div class="eyebrow">01 / EXECUTIVE OVERVIEW</div>',
-    unsafe_allow_html=True,
-)
-st.markdown(
-    '<div class="section-heading">Performance at a glance</div>',
-    unsafe_allow_html=True,
-)
-st.markdown(
-    f'<div class="section-note">Showing {len(filtered):,} records '
-    f'across {len(selected_regions)} region(s) and '
-    f'{len(selected_categories)} categor(y/ies).</div>',
-    unsafe_allow_html=True,
-)
+# =========================================================
+# 5. VÉRIFICATION DES DONNÉES
+# =========================================================
 
-k1, k2, k3, k4 = st.columns(4)
+if load_error:
+    st.error(load_error)
 
-k1.metric(
-    "Total revenue",
-    f"{total_revenue:,.2f}",
-    help="Somme du revenu pour la sélection actuelle.",
-)
-k2.metric(
-    "Delivered orders",
-    f"{total_orders:,}",
-    help="Nombre de commandes distinctes.",
-)
-k3.metric(
-    "Unique customers",
-    f"{unique_customers:,}",
-    help="Nombre de clients distincts.",
-)
-k4.metric(
-    "Average order value",
-    f"{average_order_value:,.2f}",
-    help="Revenu total divisé par le nombre de commandes distinctes.",
-)
-
-m1, m2, m3 = st.columns(3)
-
-m1.metric("Units sold", f"{total_units:,.0f}")
-m2.metric("Weighted average discount", f"{weighted_discount * 100:.1f}%")
-
-m3.metric(
-    "Revenue vs previous period",
-    f"{revenue_growth:+.1f}%" if revenue_growth is not None else "N/A",
-    help=(
-        "Compare la période sélectionnée à la période immédiatement "
-        "précédente de même durée, avec les mêmes filtres région/catégorie."
-    ),
-)
-
-# ------------------------- CHART THEME ----------------------
-
-chart_layout = dict(
-    paper_bgcolor=PANEL,
-    plot_bgcolor=PANEL,
-    font=dict(
-        family="DM Sans, sans-serif",
-        color=TEXT,
-        size=11,
-    ),
-    margin=dict(l=18, r=22, t=38, b=20),
-    xaxis=dict(
-        showgrid=False,
-        zeroline=False,
-        linecolor=BORDER,
-        tickfont=dict(color=MUTED),
-    ),
-    yaxis=dict(
-        showgrid=True,
-        gridcolor="#20334A",
-        zeroline=False,
-        linecolor=BORDER,
-        tickfont=dict(color=MUTED),
-    ),
-)
-
-# ------------------------- REVENUE --------------------------
-
-st.markdown(
-    '<div class="eyebrow">02 / REVENUE ANALYTICS</div>',
-    unsafe_allow_html=True,
-)
-st.markdown(
-    '<div class="section-heading">Follow the money</div>',
-    unsafe_allow_html=True,
-)
-st.markdown(
-    '<div class="section-note">Monthly revenue trends and category contribution.</div>',
-    unsafe_allow_html=True,
-)
-
-monthly = (
-    filtered.assign(
-        month=filtered["order_date"].dt.to_period("M").dt.to_timestamp()
+    st.markdown(
+        """
+        **Pour connecter ton dashboard :**
+        1. Vérifie que le fichier `data/ecommerce.db` existe dans ton dépôt.
+        2. Vérifie que la base contient une table `orders`.
+        3. Vérifie les noms des colonnes dans cette table.
+        """
     )
-    .groupby("month", as_index=False)
-    .agg(
-        revenue=("revenue", "sum"),
-        orders=("order_id", "nunique"),
+
+    st.stop()
+
+
+# =========================================================
+# 6. PRÉPARATION DES DONNÉES
+# =========================================================
+
+df.columns = [str(column).strip().lower() for column in df.columns]
+
+required_columns = ["order_id", "order_date", "customer_id"]
+
+missing_columns = [
+    column for column in required_columns
+    if column not in df.columns
+]
+
+if missing_columns:
+    st.error(
+        "Colonnes obligatoires manquantes : "
+        + ", ".join(missing_columns)
     )
-    .sort_values("month")
+    st.write("Colonnes disponibles :", df.columns.tolist())
+    st.stop()
+
+df["order_date"] = pd.to_datetime(
+    df["order_date"],
+    errors="coerce",
 )
 
-category_revenue = (
-    filtered.groupby("category", as_index=False)
-    .agg(revenue=("revenue", "sum"))
-    .sort_values("revenue", ascending=False)
+df = df.dropna(subset=["order_date"]).copy()
+
+if df.empty:
+    st.error("Aucune date de commande valide n'a été trouvée.")
+    st.stop()
+
+if "quantity" not in df.columns:
+    df["quantity"] = 1
+
+df["quantity"] = pd.to_numeric(
+    df["quantity"],
+    errors="coerce",
+).fillna(0)
+
+if "unit_price" not in df.columns:
+    st.error("La colonne 'unit_price' est nécessaire pour calculer le chiffre d'affaires.")
+    st.write("Colonnes disponibles :", df.columns.tolist())
+    st.stop()
+
+df["unit_price"] = pd.to_numeric(
+    df["unit_price"],
+    errors="coerce",
+).fillna(0)
+
+if "revenue" in df.columns:
+    df["revenue"] = pd.to_numeric(
+        df["revenue"],
+        errors="coerce",
+    )
+    df["revenue"] = df["revenue"].fillna(
+        df["quantity"] * df["unit_price"]
+    )
+else:
+    df["revenue"] = df["quantity"] * df["unit_price"]
+
+if "category" not in df.columns:
+    df["category"] = "Unclassified"
+
+if "region" not in df.columns:
+    df["region"] = "Unknown"
+
+if "product_name" not in df.columns:
+    df["product_name"] = "Unknown product"
+
+if "status" not in df.columns:
+    df["status"] = "Unknown"
+
+if "discount" not in df.columns:
+    df["discount"] = 0
+
+df["discount"] = pd.to_numeric(
+    df["discount"],
+    errors="coerce",
+).fillna(0)
+
+df["month"] = df["order_date"].dt.to_period("M").astype(str)
+
+
+# =========================================================
+# 7. FILTRES
+# =========================================================
+
+st.sidebar.markdown("## ✦ NOVA")
+st.sidebar.caption("E-Commerce Analytics")
+st.sidebar.divider()
+
+min_date = df["order_date"].min().date()
+max_date = df["order_date"].max().date()
+
+date_range = st.sidebar.date_input(
+    "Période",
+    value=(min_date, max_date),
+    min_value=min_date,
+    max_value=max_date,
 )
 
-left, right = st.columns([1.55, 1])
+if isinstance(date_range, (tuple, list)) and len(date_range) == 2:
+    start_date, end_date = date_range
+else:
+    start_date, end_date = min_date, max_date
 
-with left:
-    fig_monthly = px.area(
+filtered = df[
+    (df["order_date"].dt.date >= start_date)
+    & (df["order_date"].dt.date <= end_date)
+].copy()
+
+categories = sorted(
+    filtered["category"].dropna().astype(str).unique().tolist()
+)
+regions = sorted(
+    filtered["region"].dropna().astype(str).unique().tolist()
+)
+statuses = sorted(
+    filtered["status"].dropna().astype(str).unique().tolist()
+)
+
+selected_categories = st.sidebar.multiselect(
+    "Catégorie",
+    categories,
+    default=categories,
+)
+
+selected_regions = st.sidebar.multiselect(
+    "Région",
+    regions,
+    default=regions,
+)
+
+selected_statuses = st.sidebar.multiselect(
+    "Statut de commande",
+    statuses,
+    default=statuses,
+)
+
+filtered = filtered[
+    filtered["category"].astype(str).isin(selected_categories)
+    & filtered["region"].astype(str).isin(selected_regions)
+    & filtered["status"].astype(str).isin(selected_statuses)
+].copy()
+
+st.sidebar.divider()
+st.sidebar.caption("NOVA · Business intelligence")
+
+
+# =========================================================
+# 8. INDICATEURS CLÉS
+# =========================================================
+
+revenue = filtered["revenue"].sum()
+orders_count = filtered["order_id"].nunique()
+customers_count = filtered["customer_id"].nunique()
+units_sold = filtered["quantity"].sum()
+
+average_order_value = (
+    revenue / orders_count if orders_count else 0
+)
+
+
+def metric_card(label, value, note):
+    st.markdown(
+        f"""
+        <div class="metric-card">
+            <div class="metric-label">{label}</div>
+            <div class="metric-value">{value}</div>
+            <div class="metric-note">{note}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    metric_card(
+        "Total Revenue",
+        f"{revenue:,.2f}",
+        "Revenue in dataset currency",
+    )
+
+with col2:
+    metric_card(
+        "Total Orders",
+        f"{orders_count:,}",
+        "Unique order IDs",
+    )
+
+with col3:
+    metric_card(
+        "Unique Customers",
+        f"{customers_count:,}",
+        "Distinct customer IDs",
+    )
+
+with col4:
+    metric_card(
+        "Units Sold",
+        f"{units_sold:,.0f}",
+        f"Average order value: {average_order_value:,.2f}",
+    )
+
+
+# =========================================================
+# 9. GRAPHIQUES
+# =========================================================
+
+st.markdown("## Sales Performance")
+st.caption("Explore revenue trends and business performance.")
+
+chart_left, chart_right = st.columns([1.6, 1])
+
+with chart_left:
+    monthly = (
+        filtered.groupby("month", as_index=False)["revenue"]
+        .sum()
+        .sort_values("month")
+    )
+
+    fig_trend = px.line(
         monthly,
         x="month",
         y="revenue",
         markers=True,
-        custom_data=["orders"],
+        title="Monthly Revenue Trend",
+        labels={
+            "month": "Month",
+            "revenue": "Revenue",
+        },
     )
 
-    fig_monthly.update_traces(
-        line=dict(color=TEAL, width=3),
-        marker=dict(
-            size=6,
-            color=TEAL,
-            line=dict(color=BG, width=1),
-        ),
-        fillcolor="rgba(66,232,196,0.13)",
-        hovertemplate=(
-            "<b>%{x|%B %Y}</b><br>"
-            "Revenue: %{y:,.2f}<br>"
-            "Orders: %{customdata[0]:,.0f}"
-            "<extra></extra>"
-        ),
+    fig_trend.update_traces(
+        line=dict(color=ACCENT, width=3),
+        marker=dict(size=7),
+        fill="tozeroy",
+        fillcolor="rgba(37,217,195,0.08)",
     )
 
-    fig_monthly.update_layout(
-        **chart_layout,
-        height=350,
-        xaxis_title="",
-        yaxis_title="Revenue",
-        showlegend=False,
+    fig_trend.update_layout(
+        template="plotly_dark",
+        paper_bgcolor=PANEL,
+        plot_bgcolor=PANEL,
+        font=dict(color=TEXT),
+        margin=dict(l=20, r=20, t=55, b=20),
+        title_font_size=17,
+        xaxis=dict(showgrid=False),
+        yaxis=dict(gridcolor="#26364D"),
     )
 
-    st.plotly_chart(
-        fig_monthly,
-        use_container_width=True,
-        config={"displayModeBar": False},
+    st.plotly_chart(fig_trend, use_container_width=True)
+
+with chart_right:
+    category_data = (
+        filtered.groupby("category", as_index=False)["revenue"]
+        .sum()
+        .sort_values("revenue", ascending=False)
     )
 
-with right:
-    fig_donut = px.pie(
-        category_revenue,
+    fig_category = px.pie(
+        category_data,
         names="category",
         values="revenue",
-        hole=0.70,
+        hole=0.65,
+        title="Revenue by Category",
         color_discrete_sequence=[
-            TEAL, BLUE, PURPLE, AMBER,
-            "#FF8D9B", "#7DD3FC", "#A3E635",
+            ACCENT, BLUE, "#A78BFA", "#F59E0B",
+            "#F472B6", "#60A5FA",
         ],
     )
 
-    fig_donut.update_traces(
-        textposition="inside",
-        textinfo="percent",
-        textfont=dict(color=TEXT, size=10),
-        hovertemplate=(
-            "<b>%{label}</b><br>"
-            "Revenue: %{value:,.2f}<br>"
-            "Share: %{percent}"
-            "<extra></extra>"
-        ),
-        marker=dict(line=dict(color=PANEL, width=3)),
-    )
-
-    fig_donut.update_layout(
-        **chart_layout,
-        height=350,
-        showlegend=True,
-        legend=dict(
-            bgcolor="rgba(0,0,0,0)",
-            font=dict(color=MUTED, size=10),
-            orientation="h",
-            yanchor="bottom",
-            y=-0.12,
-            xanchor="center",
-            x=0.5,
-        ),
-    )
-
-    fig_donut.add_annotation(
-        text=(
-            f"<b>{total_revenue:,.0f}</b>"
-            "<br><span style='font-size:10px'>TOTAL REVENUE</span>"
-        ),
-        x=0.5,
-        y=0.5,
-        showarrow=False,
-        font=dict(family="Manrope", size=17, color=TEXT),
-    )
-
-    st.plotly_chart(
-        fig_donut,
-        use_container_width=True,
-        config={"displayModeBar": False},
-    )
-
-# ------------------------- BREAKDOWN -----------------------
-
-st.markdown(
-    '<div class="eyebrow">03 / PERFORMANCE BREAKDOWN</div>',
-    unsafe_allow_html=True,
-)
-st.markdown(
-    '<div class="section-heading">Where results happen</div>',
-    unsafe_allow_html=True,
-)
-st.markdown(
-    '<div class="section-note">Compare revenue contribution by category and region.</div>',
-    unsafe_allow_html=True,
-)
-
-c1, c2 = st.columns(2)
-
-with c1:
-    cat_chart = category_revenue.sort_values("revenue", ascending=True)
-
-    fig_category = px.bar(
-        cat_chart,
-        x="revenue",
-        y="category",
-        orientation="h",
-        text="revenue",
-    )
-
-    fig_category.update_traces(
-        marker_color=TEAL,
-        texttemplate="%{x:,.0f}",
-        textposition="outside",
-        cliponaxis=False,
-        hovertemplate="<b>%{y}</b><br>Revenue: %{x:,.2f}<extra></extra>",
-    )
-
     fig_category.update_layout(
-        **chart_layout,
-        height=330,
-        xaxis_title="Revenue",
-        yaxis_title="",
-        showlegend=False,
+        template="plotly_dark",
+        paper_bgcolor=PANEL,
+        font=dict(color=TEXT),
+        margin=dict(l=15, r=15, t=55, b=15),
+        legend=dict(orientation="h", y=-0.12),
     )
 
-    st.plotly_chart(
-        fig_category,
-        use_container_width=True,
-        config={"displayModeBar": False},
-    )
+    st.plotly_chart(fig_category, use_container_width=True)
 
-with c2:
-    region_revenue = (
-        filtered.groupby("region", as_index=False)
-        .agg(revenue=("revenue", "sum"))
-        .sort_values("revenue", ascending=True)
-    )
 
+# =========================================================
+# 10. RÉPARTITION GÉOGRAPHIQUE
+# =========================================================
+
+st.markdown("## Regional Performance")
+
+region_data = (
+    filtered.groupby("region", as_index=False)
+    .agg(
+        revenue=("revenue", "sum"),
+        orders=("order_id", "nunique"),
+    )
+    .sort_values("revenue", ascending=False)
+)
+
+if not region_data.empty:
     fig_region = px.bar(
-        region_revenue,
-        x="revenue",
-        y="region",
-        orientation="h",
-        text="revenue",
-    )
-
-    fig_region.update_traces(
-        marker_color=BLUE,
-        texttemplate="%{x:,.0f}",
-        textposition="outside",
-        cliponaxis=False,
-        hovertemplate="<b>%{y}</b><br>Revenue: %{x:,.2f}<extra></extra>",
+        region_data,
+        x="region",
+        y="revenue",
+        color="revenue",
+        title="Revenue by Region",
+        labels={
+            "region": "Region",
+            "revenue": "Revenue",
+        },
+        color_continuous_scale=["#164E63", ACCENT],
     )
 
     fig_region.update_layout(
-        **chart_layout,
-        height=330,
-        xaxis_title="Revenue",
-        yaxis_title="",
-        showlegend=False,
+        template="plotly_dark",
+        paper_bgcolor=PANEL,
+        plot_bgcolor=PANEL,
+        font=dict(color=TEXT),
+        margin=dict(l=20, r=20, t=55, b=20),
+        coloraxis_showscale=False,
+        xaxis=dict(showgrid=False),
+        yaxis=dict(gridcolor="#26364D"),
     )
 
-    st.plotly_chart(
-        fig_region,
-        use_container_width=True,
-        config={"displayModeBar": False},
-    )
-
-# ------------------------- INSIGHTS ------------------------
-
-st.markdown(
-    '<div class="eyebrow">04 / INTELLIGENCE LAYER</div>',
-    unsafe_allow_html=True,
-)
-st.markdown(
-    '<div class="section-heading">Signals worth noticing</div>',
-    unsafe_allow_html=True,
-)
-st.markdown(
-    '<div class="section-note">Insights calculated from the filtered dataset.</div>',
-    unsafe_allow_html=True,
-)
-
-category_rank = category_revenue.sort_values("revenue", ascending=False)
-region_rank = region_revenue.sort_values("revenue", ascending=False)
-monthly_rank = monthly.sort_values("month")
-
-best_category = category_rank.iloc[0]
-best_region = region_rank.iloc[0]
-best_month = monthly_rank.loc[monthly_rank["revenue"].idxmax()]
-
-category_share = (
-    best_category["revenue"] / total_revenue * 100
-    if total_revenue else 0
-)
-region_share = (
-    best_region["revenue"] / total_revenue * 100
-    if total_revenue else 0
-)
-
-# Compare the last two months present in the selected data.
-if len(monthly_rank) >= 2:
-    last_month = monthly_rank.iloc[-1]
-    previous_month = monthly_rank.iloc[-2]
-
-    if previous_month["revenue"] > 0:
-        monthly_change = (
-            (last_month["revenue"] - previous_month["revenue"])
-            / previous_month["revenue"] * 100
-        )
-
-        if monthly_change < 0:
-            signal_color = RED
-            signal_title = "MONTHLY REVENUE DECLINE"
-            signal_text = (
-                f"Revenue decreased by {abs(monthly_change):.1f}% "
-                f"from {previous_month['month']:%b %Y} "
-                f"to {last_month['month']:%b %Y}."
-            )
-        elif monthly_change > 0:
-            signal_color = TEAL
-            signal_title = "MONTHLY REVENUE INCREASE"
-            signal_text = (
-                f"Revenue increased by {monthly_change:.1f}% "
-                f"from {previous_month['month']:%b %Y} "
-                f"to {last_month['month']:%b %Y}."
-            )
-        else:
-            signal_color = AMBER
-            signal_title = "MONTHLY REVENUE STABLE"
-            signal_text = (
-                "Revenue was unchanged between the last two "
-                "months in the selected data."
-            )
-    else:
-        signal_color = AMBER
-        signal_title = "MONTHLY COMPARISON"
-        signal_text = (
-            "The previous month had zero revenue; percentage "
-            "change cannot be calculated."
-        )
+    st.plotly_chart(fig_region, use_container_width=True)
 else:
-    signal_color = AMBER
-    signal_title = "MORE DATA NEEDED"
-    signal_text = (
-        "At least two months are needed to compare monthly revenue."
-    )
+    st.info("Aucune donnée régionale pour les filtres sélectionnés.")
 
-ins1, ins2, ins3 = st.columns(3)
 
-with ins1:
-    st.markdown(
-        f"""
-        <div class="insight-card">
-            <div class="insight-label" style="color:{TEAL}">
-                TOP CATEGORY
-            </div>
-            <div class="insight-value">
-                {escape(str(best_category['category']))}
-            </div>
-            <div class="insight-description">
-                Revenue: {best_category['revenue']:,.2f}<br>
-                {category_share:.1f}% of filtered revenue.
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+# =========================================================
+# 11. TOP PRODUITS
+# =========================================================
 
-with ins2:
-    st.markdown(
-        f"""
-        <div class="insight-card">
-            <div class="insight-label" style="color:{BLUE}">
-                TOP REGION
-            </div>
-            <div class="insight-value">
-                {escape(str(best_region['region']))}
-            </div>
-            <div class="insight-description">
-                Revenue: {best_region['revenue']:,.2f}<br>
-                {region_share:.1f}% of filtered revenue.
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+st.markdown("## Product Insights")
 
-with ins3:
-    st.markdown(
-        f"""
-        <div class="insight-card">
-            <div class="insight-label" style="color:{signal_color}">
-                {signal_title}
-            </div>
-            <div class="insight-value">
-                {best_month['month']:%B %Y}
-            </div>
-            <div class="insight-description">
-                Peak month: {best_month['revenue']:,.2f}<br>
-                {escape(signal_text)}
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-# ------------------------- TOP PRODUCTS --------------------
-
-st.markdown(
-    '<div class="eyebrow">05 / PRODUCT INTELLIGENCE</div>',
-    unsafe_allow_html=True,
-)
-st.markdown(
-    '<div class="section-heading">Products leading performance</div>',
-    unsafe_allow_html=True,
-)
-st.markdown(
-    '<div class="section-note">Top 10 products ranked by revenue, with '
-    'units sold and distinct orders for context.</div>',
-    unsafe_allow_html=True,
-)
-
-top_products = (
+product_data = (
     filtered.groupby("product_name", as_index=False)
     .agg(
         revenue=("revenue", "sum"),
-        units_sold=("quantity", "sum"),
+        quantity=("quantity", "sum"),
         orders=("order_id", "nunique"),
     )
     .sort_values("revenue", ascending=False)
     .head(10)
-    .reset_index(drop=True)
 )
 
-top_products.index = top_products.index + 1
-top_products.index.name = "Rank"
+if not product_data.empty:
+    fig_products = px.bar(
+        product_data.sort_values("revenue"),
+        x="revenue",
+        y="product_name",
+        orientation="h",
+        title="Top 10 Products by Revenue",
+        labels={
+            "revenue": "Revenue",
+            "product_name": "Product",
+        },
+        color="revenue",
+        color_continuous_scale=["#164E63", ACCENT],
+    )
 
-st.dataframe(
-    top_products.style.format(
-        {
-            "revenue": "{:,.2f}",
-            "units_sold": "{:,.0f}",
-            "orders": "{:,.0f}",
-        }
-    ),
-    use_container_width=True,
-)
+    fig_products.update_layout(
+        template="plotly_dark",
+        paper_bgcolor=PANEL,
+        plot_bgcolor=PANEL,
+        font=dict(color=TEXT),
+        margin=dict(l=20, r=20, t=55, b=20),
+        coloraxis_showscale=False,
+        yaxis=dict(showgrid=False),
+        xaxis=dict(gridcolor="#26364D"),
+    )
 
-# ------------------------- DATA EXPLORER -------------------
+    st.plotly_chart(fig_products, use_container_width=True)
 
-st.markdown(
-    '<div class="eyebrow">06 / DATA EXPLORER</div>',
-    unsafe_allow_html=True,
-)
-st.markdown(
-    '<div class="section-heading">Explore the underlying records</div>',
-    unsafe_allow_html=True,
-)
-st.markdown(
-    '<div class="section-note">Inspect and export the records that match '
-    'your current filters.</div>',
-    unsafe_allow_html=True,
-)
 
-display_columns = [
-    column
-    for column in [
-        "order_id",
-        "order_date",
-        "customer_id",
-        "product_name",
-        "category",
-        "region",
-        "quantity",
-        "unit_price",
-        "discount",
-        "revenue",
-        "status",
-    ]
-    if column in filtered.columns
-]
+# =========================================================
+# 12. TABLEAU DE DONNÉES
+# =========================================================
 
-display_df = filtered[display_columns].copy()
-display_df["order_date"] = display_df["order_date"].dt.strftime("%Y-%m-%d")
-
-with st.expander("Open filtered transaction table"):
+with st.expander("View filtered order data"):
     st.dataframe(
-        display_df,
+        filtered,
         use_container_width=True,
         hide_index=True,
     )
 
-# Export the filtered dataset, including all source columns.
-csv_data = filtered.to_csv(index=False).encode("utf-8-sig")
+    csv_data = filtered.to_csv(index=False).encode("utf-8")
 
-st.download_button(
-    label="↓  Export filtered data (CSV)",
-    data=csv_data,
-    file_name="nexus_commerce_filtered_data.csv",
-    mime="text/csv",
-)
+    st.download_button(
+        label="Download CSV",
+        data=csv_data,
+        file_name="nova_ecommerce_analytics.csv",
+        mime="text/csv",
+    )
 
-# ------------------------- FOOTER --------------------------
+
+# =========================================================
+# 13. FOOTER
+# =========================================================
 
 st.markdown(
-    f"""
-    <div class="footer">
-        <b style="color:{TEXT}">NEXUS COMMERCE INTELLIGENCE</b><br>
-        Portfolio project · Python · SQLite · Pandas · Plotly · Streamlit<br>
-        Metrics reflect the current filter selection and existing database.
+    """
+    <div style="
+        text-align:center;
+        padding:28px 0 10px 0;
+        color:#91A1B7;
+        font-size:12px;
+        border-top:1px solid #24334A;
+        margin-top:30px;
+    ">
+        NOVA | E-Commerce Analytics · Interactive Business Intelligence
     </div>
     """,
     unsafe_allow_html=True,
